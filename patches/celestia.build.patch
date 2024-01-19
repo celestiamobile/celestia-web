@@ -1,0 +1,75 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ad9b72ae..6db71a36 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -93,6 +93,8 @@ endif()
+ # Use our cmake files
+ list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+ 
++list(INSERT CMAKE_FIND_ROOT_PATH 0 "${ADDITIONAL_FIND_ROOT_PATH}")
++
+ # Require Windows 7
+ if(WIN32)
+   set(WINVER 0x0601)
+@@ -105,8 +107,8 @@ if(USE_ICU)
+     include(winicu)
+     EnableWinICU()
+   else()
+-    find_package(ICU REQUIRED COMPONENTS uc i18n)
+-    link_libraries(ICU::uc ICU::i18n)
++    find_package(ICU REQUIRED COMPONENTS uc i18n data)
++    link_libraries(ICU::uc ICU::i18n ICU::data)
+   endif()
+ endif()
+ 
+@@ -256,10 +258,6 @@ if(ENABLE_WIN OR ENABLE_TOOLS)
+   find_package(OpenGL REQUIRED)
+ endif()
+ 
+-find_package(Libepoxy REQUIRED)
+-link_libraries(libepoxy::libepoxy)
+-include_directories(${LIBEPOXY_INCLUDE_DIR})
+-
+ find_package(Eigen3 3.3 REQUIRED NO_MODULE) # -DEigen3_DIR=...
+ message(STATUS "Found Eigen3 ${EIGEN3_VERSION_STRING}")
+ link_libraries(Eigen3::Eigen)
+diff --git a/src/celestia/CMakeLists.txt b/src/celestia/CMakeLists.txt
+index c76f7213..61d0411f 100644
+--- a/src/celestia/CMakeLists.txt
++++ b/src/celestia/CMakeLists.txt
+@@ -95,7 +95,7 @@ list(GET PROJECT_VERSION_LIST 0 PROJECT_VERSION_MAJOR)
+ list(GET PROJECT_VERSION_LIST 1 PROJECT_VERSION_MINOR)
+ set(CELSO "celestia-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
+ 
+-add_library(celestia SHARED ${CELESTIA_SOURCES}
++add_library(celestia STATIC ${CELESTIA_SOURCES}
+                             ${SCRIPT_LIBS}
+                             ${CELESTIA_CORE_LIBS}
+ )
+diff --git a/src/celestia/sdl/CMakeLists.txt b/src/celestia/sdl/CMakeLists.txt
+index f448ff36..e0e803ee 100644
+--- a/src/celestia/sdl/CMakeLists.txt
++++ b/src/celestia/sdl/CMakeLists.txt
+@@ -23,6 +23,8 @@ else()
+   target_link_libraries(celestia-sdl PRIVATE ${SDL2_LIBRARIES})
+ endif()
+ 
++set_target_properties(celestia-sdl PROPERTIES LINK_FLAGS "--preload-file ${CMAKE_SOURCE_DIR}/CelestiaResources@/ --bind -sUSE_WEBGL2=1 -sGL_ENABLE_GET_PROC_ADDRESS -sTOTAL_MEMORY=419430400")
++
+ install(
+   TARGETS celestia-sdl
+   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+diff --git a/thirdparty/fmt b/thirdparty/fmt
+index 4ca6821e..f5e54359 160000
+--- a/thirdparty/fmt
++++ b/thirdparty/fmt
+@@ -1 +1 @@
+-Subproject commit 4ca6821e8f26c96f815064f77dff0a74f562bffb
++Subproject commit f5e54359df4c26b6230fc61d38aa294581393084
+diff --git a/thirdparty/miniaudio b/thirdparty/miniaudio
+index d76b9a1a..4a5b74be 160000
+--- a/thirdparty/miniaudio
++++ b/thirdparty/miniaudio
+@@ -1 +1 @@
+-Subproject commit d76b9a1ac424b5b259c2faeea0dc83d215df522a
++Subproject commit 4a5b74bef029b3592c54b6048650ee5f972c1a48

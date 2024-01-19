@@ -1,0 +1,352 @@
+diff --git a/build_emscripten.sh b/build_emscripten.sh
+index 809ffce..08bf1e0 100644
+--- a/build_emscripten.sh
++++ b/build_emscripten.sh
+@@ -8,60 +8,59 @@ source common.sh
+ source cmake.sh
+ source versions.sh
+ 
+-mkdir -p $LIB_PATH
+-mkdir -p $INCLUDE_PATH
++mkdir -p $RESULT_PATH
+ 
+ build_with_cmake "SDL2" $SDL2_VERSION ".tar.gz" "SDL2" "libSDL2" ".." "-DSDL_STATIC=ON" "-DSDL_SHARED=OFF" "-DSDL_TEST=OFF"
+ build_with_cmake "jpeg" $JPEG_TURBO_VERSION ".tar.gz" "jpeg" "libjpeg" ".." "-DENABLE_STATIC=ON" "-DENABLE_SHARED=OFF" "-DWITH_TURBOJPEG=OFF"
+ build_with_cmake "zlib" $ZLIB_VERSION ".tar.gz" "zlib" "libz" ".."
+-build_with_cmake "libpng" $LIBPNG_VERSION ".tar.xz" "libpng" "libpng" ".." "-DZLIB_LIBRARY=$LIB_PATH/libz.a" "-DZLIB_INCLUDE_DIR=$INCLUDE_PATH/zlib"
+-build_with_cmake "freetype" $FREETYPE_VERSION ".tar.xz" "freetype" "libfreetype" ".." "-DZLIB_LIBRARY=$LIB_PATH/libz.a" "-DZLIB_INCLUDE_DIR=$INCLUDE_PATH/zlib" "-DFT_DISABLE_BROTLI=ON" "-DFT_DISABLE_HARFBUZZ=ON" "-DFT_DISABLE_PNG=ON"
++build_with_cmake "libpng" $LIBPNG_VERSION ".tar.xz" "libpng" "libpng" ".." "-DZLIB_LIBRARY=$RESULT_PATH/lib/libz.a" "-DZLIB_INCLUDE_DIR=$RESULT_PATH/include"
++build_with_cmake "freetype" $FREETYPE_VERSION ".tar.xz" "freetype" "libfreetype" ".." "-DZLIB_LIBRARY=$RESULT_PATH/lib/libz.a" "-DZLIB_INCLUDE_DIR=$RESULT_PATH/include" "-DFT_DISABLE_BROTLI=ON" "-DFT_DISABLE_HARFBUZZ=ON" "-DFT_DISABLE_PNG=ON"
+ build_with_cmake "fmt" $FMT_VERSION ".tar.gz" "fmt" "libfmt" ".." "-DFMT_TEST=OFF" "-DBUILD_SHARED_LIBS=OFF"
+ build_with_cmake "meshoptimizer" $MESHOPTIMIZER_VERSION ".tar.gz" "meshoptimizer" "libmeshoptimizer"
+ build_with_cmake "eigen" $EIGEN_VERSION ".tar.gz"
+-
+-# CSPICE
+-
+-echo "Building CSPICE"
+-compile_cspice()
+-{
+-  unarchive_and_enter $CSPICE_VERSION ".tar.Z"
+-
+-  echo "Applying patch 1"
+-  sed -ie 's/rv  = system(buff);/\/\/ rv  = system(buff);/g' src/cspice/system_.c
+-  check_success
+-  echo "Applying patch 2"
+-  TO_REPLACE="ranlib"
+-  NEW_STRING=$RANLIB
+-  sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" src/cspice/mkprodct.csh
+-  check_success
+-  echo "Applying patch 3"
+-  TO_REPLACE="ar  crv"
+-  NEW_STRING="${AR}  crv"
+-  sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" src/cspice/mkprodct.csh
+-  check_success
+-
+-  cd src/cspice
+-  export TKCOMPILER=$CC
+-  export TKCOMPILEOPTIONS="-c -ansi -O2 -fPIC -DNON_UNIX_STDIO"
+-  export TKLINKOPTIONS="-lm"
+-  csh mkprodct.csh
+-  check_success
+-  cd ../..
+-
+-  echo "Copying products"
+-  mkdir -p $INCLUDE_PATH/cspice
+-  cp -r include/* $INCLUDE_PATH/cspice/
+-  cp lib/cspice.a $LIB_PATH
+-  check_success
+-
+-  echo "Cleaning"
+-  cd ..
+-  rm -rf $CSPICE_VERSION
+-}
+-
+-configure_emscripten
+-compile_cspice
++#
++## CSPICE
++#
++#echo "Building CSPICE"
++#compile_cspice()
++#{
++#  unarchive_and_enter $CSPICE_VERSION ".tar.Z"
++#
++#  echo "Applying patch 1"
++#  sed -ie 's/rv  = system(buff);/\/\/ rv  = system(buff);/g' src/cspice/system_.c
++#  check_success
++#  echo "Applying patch 2"
++#  TO_REPLACE="ranlib"
++#  NEW_STRING=$RANLIB
++#  sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" src/cspice/mkprodct.csh
++#  check_success
++#  echo "Applying patch 3"
++#  TO_REPLACE="ar  crv"
++#  NEW_STRING="${AR}  crv"
++#  sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" src/cspice/mkprodct.csh
++#  check_success
++#
++#  cd src/cspice
++#  export TKCOMPILER=$CC
++#  export TKCOMPILEOPTIONS="-c -ansi -O2 -fPIC -DNON_UNIX_STDIO"
++#  export TKLINKOPTIONS="-lm"
++#  csh mkprodct.csh
++#  check_success
++#  cd ../..
++#
++#  echo "Copying products"
++#  mkdir -p $INCLUDE_PATH/cspice
++#  cp -r include/* $INCLUDE_PATH/cspice/
++#  cp lib/cspice.a $LIB_PATH
++#  check_success
++#
++#  echo "Cleaning"
++#  cd ..
++#  rm -rf $CSPICE_VERSION
++#}
++#
++#configure_emscripten
++#compile_cspice
+ 
+ # gettext
+ 
+@@ -71,7 +70,7 @@ compile_gettext()
+   unarchive_and_enter $GETTEXT_VERSION ".tar.gz"
+   cd gettext-runtime
+ 
+-  OUTPUT_PATH="$(pwd)/output"
++  OUTPUT_PATH=$RESULT_PATH
+   ./configure --disable-dependency-tracking \
+               --disable-silent-rules \
+               --disable-debug \
+@@ -101,12 +100,6 @@ compile_gettext()
+   make -j4 install
+   check_success
+ 
+-  echo "Copying products"
+-  mkdir -p $INCLUDE_PATH/gettext
+-  cp -r output/include/* $INCLUDE_PATH/gettext/
+-  cp output/lib/libintl.a $LIB_PATH
+-  check_success
+-
+   echo "Cleaning"
+   cd ../..
+   rm -rf $GETTEXT_VERSION
+@@ -145,15 +138,18 @@ compile_lua()
+   NEW_STRING="AR= ${AR} rcu"
+   sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" src/Makefile
+ 
+-  OUTPUT_PATH="$(pwd)/output"
++  OUTPUT_PATH=$RESULT_PATH
+ 
+   make generic install INSTALL_TOP=${OUTPUT_PATH}
+   check_success
+ 
+-  echo "Copying products"
+-  mkdir -p $INCLUDE_PATH/lua
+-  cp -r output/include/* $INCLUDE_PATH/lua/
+-  cp output/lib/liblua.a $LIB_PATH
++  echo "Applying patch 6"
++  TO_REPLACE="prefix= /usr/local"
++  NEW_STRING="prefix= ${RESULT_PATH}"
++  sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" etc/lua.pc
++  check_success
++
++  cp etc/lua.pc $RESULT_PATH/lib/pkgconfig
+   check_success
+ 
+   echo "Cleaning"
+@@ -163,35 +159,35 @@ compile_lua()
+ 
+ configure_emscripten
+ compile_lua
+-
+-# libepoxy
+-
+-echo "Building libepoxy"
+-compile_libepoxy()
+-{
+-  unarchive_and_enter $LIBEPOXY_VERSION ".tar.xz"
+-
+-  mkdir build
+-  cd build
+-
+-  meson --buildtype=release --default-library=static -Dtests=false --prefix=`pwd`/output --cross-file ../../emscripten.txt
+-  ninja install
+-  check_success
+-
+-  echo "Copying products"
+-  mkdir -p $INCLUDE_PATH/libepoxy
+-  cp -r output/include/* $INCLUDE_PATH/libepoxy/
+-  cp output/lib/libepoxy.a $LIB_PATH/libGL.a
+-  check_success
+-
+-  cd ..
+-
+-  echo "Cleaning"
+-  cd ..
+-  rm -rf $LIBEPOXY_VERSION
+-}
+-
+-compile_libepoxy
++#
++## libepoxy
++#
++#echo "Building libepoxy"
++#compile_libepoxy()
++#{
++#  unarchive_and_enter $LIBEPOXY_VERSION ".tar.xz"
++#
++#  mkdir build
++#  cd build
++#
++#  meson --buildtype=release --default-library=static -Dtests=false --prefix=`pwd`/output --cross-file ../../emscripten.txt
++#  ninja install
++#  check_success
++#
++#  echo "Copying products"
++#  mkdir -p $INCLUDE_PATH/libepoxy
++#  cp -r output/include/* $INCLUDE_PATH/libepoxy/
++#  cp output/lib/libepoxy.a $LIB_PATH/libGL.a
++#  check_success
++#
++#  cd ..
++#
++#  echo "Cleaning"
++#  cd ..
++#  rm -rf $LIBEPOXY_VERSION
++#}
++#
++#compile_libepoxy
+ 
+ # icu
+ 
+@@ -208,7 +204,7 @@ compile_icu()
+   check_success
+ 
+   export LDFLAGS="${LDFLAGS} -lc++"
+-  OUTPUT_PATH="$(pwd)/output"
++  OUTPUT_PATH=$RESULT_PATH
+   ./source/configure --disable-samples \
+               --disable-tests \
+               --disable-extras \
+@@ -225,15 +221,6 @@ compile_icu()
+   make -j8 install
+   check_success
+ 
+-  echo "Copying products"
+-  mkdir -p $INCLUDE_PATH/icu
+-  cp -r output/include/* $INCLUDE_PATH/icu/
+-  cp output/lib/libicudata.a $LIB_PATH
+-  cp output/lib/libicui18n.a $LIB_PATH
+-  cp output/lib/libicuuc.a $LIB_PATH
+-
+-  check_success
+-
+   echo "Cleaning"
+   cd ..
+   rm -rf $ICU_VERSION
+@@ -241,17 +228,16 @@ compile_icu()
+ 
+ configure_emscripten
+ compile_icu
+-
+-mkdir -p $INCLUDE_PATH/angle
+-unarchive_and_enter $OPENGL_VERSION ".tar.gz"
+-cp -r api/* $INCLUDE_PATH/angle/
+-cd ..
+-
+-unarchive_and_enter $EGL_VERSION ".tar.gz"
+-cp -r api/KHR $INCLUDE_PATH/angle/
+-cd ..
+-
++#
++#mkdir -p $INCLUDE_PATH/angle
++#unarchive_and_enter $OPENGL_VERSION ".tar.gz"
++#cp -r api/* $INCLUDE_PATH/angle/
++#cd ..
++#
++#unarchive_and_enter $EGL_VERSION ".tar.gz"
++#cp -r api/KHR $INCLUDE_PATH/angle/
++#cd ..
++#
+ unarchive_and_enter $MINIAUDIO_VERSION ".tar.gz"
+-mkdir -p $INCLUDE_PATH/miniaudio
+-cp miniaudio.h $INCLUDE_PATH/miniaudio/
++cp miniaudio.h $RESULT_PATH/include/
+ cd ..
+diff --git a/cmake.sh b/cmake.sh
+index fdfdf99..455ca0b 100644
+--- a/cmake.sh
++++ b/cmake.sh
+@@ -16,7 +16,11 @@ build_with_cmake_arch()
+   mkdir build
+   cd build
+ 
+-  OUTPUT_PATH=$(pwd)/output
++  if [ "$TARGET" == "Emscripten" ] ; then
++    OUTPUT_PATH=$RESULT_PATH
++  else
++    OUTPUT_PATH=$(pwd)/output
++  fi
+ 
+   if [ "$TARGET" == "iOS" ]; then
+     echo "Building for iOS"
+@@ -134,26 +138,25 @@ build_with_cmake_arch()
+ 
+   cd ..
+ 
+-  if [ -z "$4" ] || [ "$4" == "dummy" ]; then
+-    HEADER_PATH=$INCLUDE_PATH
+-  else
+-    HEADER_PATH=$INCLUDE_PATH/$4
+-  fi
+-
+-  echo "Copying products"
+-  mkdir -p $HEADER_PATH
+-  cp -r $OUTPUT_PATH/include/* $HEADER_PATH
+-  check_success
+-  if [ ! -z "$5" ] && [ "$5" != "dummy" ]; then
+-    if [ "$TARGET" == "Android" ]; then
+-      cp $OUTPUT_PATH/lib/$5.a $LIB_PATH/$1/$5.a
+-      check_success
+-    elif [ "$TARGET" == "Emscripten" ]; then
+-      cp $OUTPUT_PATH/lib/$5.a $LIB_PATH/$5.a
+-      check_success
++  if [ "$TARGET" != "Emscripten" ]; then
++    echo "Copying products"
++    if [ -z "$4" ] || [ "$4" == "dummy" ]; then
++      HEADER_PATH=$INCLUDE_PATH
+     else
+-      cp $OUTPUT_PATH/lib/$5.a $LIB_PATH/${1}_$5.a
+-      check_success
++      HEADER_PATH=$INCLUDE_PATH/$4
++    fi
++    mkdir -p $HEADER_PATH
++
++    cp -r $OUTPUT_PATH/include/* $HEADER_PATH
++    check_success
++    if [ ! -z "$5" ] && [ "$5" != "dummy" ]; then
++      if [ "$TARGET" == "Android" ]; then
++        cp $OUTPUT_PATH/lib/$5.a $LIB_PATH/$1/$5.a
++        check_success
++      else
++        cp $OUTPUT_PATH/lib/$5.a $LIB_PATH/${1}_$5.a
++        check_success
++      fi
+     fi
+   fi
+ 
+diff --git a/common.sh b/common.sh
+index 65e2d1f..5156393 100644
+--- a/common.sh
++++ b/common.sh
+@@ -187,8 +187,7 @@ elif [ "$TARGET" == "Android" ]; then
+   CMAKE=$NDK/../../cmake/3.22.1/bin/cmake
+   CMAKE_TOOLCHAIN_PATH=$NDK/build/cmake/android.toolchain.cmake
+ elif [ "$TARGET" == "Emscripten" ]; then
+-  LIB_PATH="$(pwd)/emscripten/libs"
+-  INCLUDE_PATH="$(pwd)/emscripten/include"
++  RESULT_PATH="$(pwd)/emscripten"
+   CMAKE=cmake
+ else
+   echo "Unknown target"
