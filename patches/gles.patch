@@ -157,19 +157,19 @@ index cc166b93..bd615de7 100644
  }
  
 diff --git a/src/celscript/lua/celx_misc.cpp b/src/celscript/lua/celx_misc.cpp
-index 22f0e7ee..03cfa648 100644
+index 010992fd..01836ed8 100644
 --- a/src/celscript/lua/celx_misc.cpp
 +++ b/src/celscript/lua/celx_misc.cpp
-@@ -198,8 +198,8 @@ static int font_render(lua_State* l)
+@@ -214,8 +214,8 @@ static int font_render(lua_State* l)
      const char* s = celx.safeGetString(2, AllErrors, "First argument to font:render must be a string");
-     auto font = *celx.getThis<std::shared_ptr<TextureFont>>();
+     const auto* font = celx.getThis<std::shared_ptr<TextureFont>>();
      Eigen::Matrix4f p, m;
 -    glGetFloatv(GL_PROJECTION_MATRIX, p.data());
 -    glGetFloatv(GL_MODELVIEW_MATRIX, m.data());
 +    fpcGetFloatv(GL_PROJECTION_MATRIX, p.data());
 +    fpcGetFloatv(GL_MODELVIEW_MATRIX, m.data());
      TextLayout layout;
-     layout.setFont(font);
+     layout.setFont(*font);
      layout.begin(p, m);
 diff --git a/src/celscript/lua/glcompat.cpp b/src/celscript/lua/glcompat.cpp
 index bf8cc4f0..a7af11b8 100644

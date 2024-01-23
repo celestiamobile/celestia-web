@@ -4,6 +4,7 @@ resources:
     type: github
     endpoint: GithubAuth
     name: celestiamobile/Celestia
+    ref: develop
   - repository: apple-android
     type: git
     name: Celestia/apple-android
