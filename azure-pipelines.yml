@@ -66,14 +66,14 @@ steps:
     connection: GithubAuth
     userRepository: celestiamobile/Celestia
     defaultVersionType: 'specificTag'
-    version: '1_6_4_rc1'
-    itemPattern: 'CelestiaResources1.6.4.zip'
+    version: '1_6_6_rc1'
+    itemPattern: 'CelestiaResources1.6.6.zip'
     downloadPath: '$(System.ArtifactsDirectory)'
   displayName: 'Download Resources'
 
 - script: |
     cd Celestia
-    unzip $(System.ArtifactsDirectory)/CelestiaResources1.6.4.zip -d .
+    unzip $(System.ArtifactsDirectory)/CelestiaResources1.6.6.zip -d .
     unzip $(System.ArtifactsDirectory)/CelestiaResources1.4.3.zip -d old
   displayName: 'Unzip Resources'
 
