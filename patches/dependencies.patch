@@ -1,10 +1,10 @@
 diff --git a/build_emscripten.sh b/build_emscripten.sh
-index 809ffce..08bf1e0 100644
+index 274ef53..7b82a44 100644
 --- a/build_emscripten.sh
 +++ b/build_emscripten.sh
-@@ -8,60 +8,59 @@ source common.sh
- source cmake.sh
- source versions.sh
+@@ -8,60 +8,59 @@ TARGET="Emscripten"
+ . `pwd`/cmake.sh
+ . `pwd`/versions.sh
  
 -mkdir -p $LIB_PATH
 -mkdir -p $INCLUDE_PATH
@@ -220,16 +220,16 @@ index 809ffce..08bf1e0 100644
  
  # icu
  
-@@ -208,7 +204,7 @@ compile_icu()
+@@ -207,7 +203,7 @@ compile_icu()
+   sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" source/tools/pkgdata/pkgdata.cpp
    check_success
  
-   export LDFLAGS="${LDFLAGS} -lc++"
 -  OUTPUT_PATH="$(pwd)/output"
 +  OUTPUT_PATH=$RESULT_PATH
    ./source/configure --disable-samples \
                --disable-tests \
                --disable-extras \
-@@ -225,15 +221,6 @@ compile_icu()
+@@ -224,15 +220,6 @@ compile_icu()
    make -j8 install
    check_success
  
@@ -245,7 +245,7 @@ index 809ffce..08bf1e0 100644
    echo "Cleaning"
    cd ..
    rm -rf $ICU_VERSION
-@@ -241,17 +228,16 @@ compile_icu()
+@@ -240,17 +227,16 @@ compile_icu()
  
  configure_emscripten
  compile_icu
@@ -275,7 +275,7 @@ index 809ffce..08bf1e0 100644
 +cp miniaudio.h $RESULT_PATH/include/
  cd ..
 diff --git a/cmake.sh b/cmake.sh
-index fdfdf99..455ca0b 100644
+index 23b0795..13b6597 100644
 --- a/cmake.sh
 +++ b/cmake.sh
 @@ -16,7 +16,11 @@ build_with_cmake_arch()
@@ -283,19 +283,19 @@ index fdfdf99..455ca0b 100644
    cd build
  
 -  OUTPUT_PATH=$(pwd)/output
-+  if [ "$TARGET" == "Emscripten" ] ; then
++  if [ "$TARGET" = "Emscripten" ] ; then
 +    OUTPUT_PATH=$RESULT_PATH
 +  else
 +    OUTPUT_PATH=$(pwd)/output
 +  fi
  
-   if [ "$TARGET" == "iOS" ]; then
+   if [ "$TARGET" = "iOS" ]; then
      echo "Building for iOS"
 @@ -134,26 +138,25 @@ build_with_cmake_arch()
  
    cd ..
  
--  if [ -z "$4" ] || [ "$4" == "dummy" ]; then
+-  if [ -z "$4" ] || [ "$4" = "dummy" ]; then
 -    HEADER_PATH=$INCLUDE_PATH
 -  else
 -    HEADER_PATH=$INCLUDE_PATH/$4
@@ -306,15 +306,15 @@ index fdfdf99..455ca0b 100644
 -  cp -r $OUTPUT_PATH/include/* $HEADER_PATH
 -  check_success
 -  if [ ! -z "$5" ] && [ "$5" != "dummy" ]; then
--    if [ "$TARGET" == "Android" ]; then
+-    if [ "$TARGET" = "Android" ]; then
 -      cp $OUTPUT_PATH/lib/$5.a $LIB_PATH/$1/$5.a
 -      check_success
--    elif [ "$TARGET" == "Emscripten" ]; then
+-    elif [ "$TARGET" = "Emscripten" ]; then
 -      cp $OUTPUT_PATH/lib/$5.a $LIB_PATH/$5.a
 -      check_success
 +  if [ "$TARGET" != "Emscripten" ]; then
 +    echo "Copying products"
-+    if [ -z "$4" ] || [ "$4" == "dummy" ]; then
++    if [ -z "$4" ] || [ "$4" = "dummy" ]; then
 +      HEADER_PATH=$INCLUDE_PATH
      else
 -      cp $OUTPUT_PATH/lib/$5.a $LIB_PATH/${1}_$5.a
@@ -326,7 +326,7 @@ index fdfdf99..455ca0b 100644
 +    cp -r $OUTPUT_PATH/include/* $HEADER_PATH
 +    check_success
 +    if [ ! -z "$5" ] && [ "$5" != "dummy" ]; then
-+      if [ "$TARGET" == "Android" ]; then
++      if [ "$TARGET" = "Android" ]; then
 +        cp $OUTPUT_PATH/lib/$5.a $LIB_PATH/$1/$5.a
 +        check_success
 +      else
@@ -337,13 +337,13 @@ index fdfdf99..455ca0b 100644
    fi
  
 diff --git a/common.sh b/common.sh
-index 65e2d1f..5156393 100644
+index 5992622..dd1a2d7 100644
 --- a/common.sh
 +++ b/common.sh
-@@ -187,8 +187,7 @@ elif [ "$TARGET" == "Android" ]; then
-   CMAKE=$NDK/../../cmake/3.22.1/bin/cmake
-   CMAKE_TOOLCHAIN_PATH=$NDK/build/cmake/android.toolchain.cmake
- elif [ "$TARGET" == "Emscripten" ]; then
+@@ -197,8 +197,7 @@ elif [ "$TARGET" = "Linux" ]; then
+   INCLUDE_PATH="$(pwd)/linux/include"
+   CMAKE=cmake
+ elif [ "$TARGET" = "Emscripten" ]; then
 -  LIB_PATH="$(pwd)/emscripten/libs"
 -  INCLUDE_PATH="$(pwd)/emscripten/include"
 +  RESULT_PATH="$(pwd)/emscripten"

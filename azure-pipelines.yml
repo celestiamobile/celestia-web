@@ -113,22 +113,25 @@ steps:
 
 - script: |
     cd apple-android
-    sh ./download.sh
+    chmod +x download.sh
+    ./download.sh
   displayName: 'Download'
 
 - script: |
     cd emsdk
-    source ./emsdk_env.sh
+    . ./emsdk_env.sh
     cd ../apple-android
     sudo xcode-select -s /Applications/Xcode_$(xcodeVersion).app
     xcodebuild -version
-    sh ./prepare_icu.sh
-    sh ./build_emscripten.sh
+    chmod +x prepare_icu.sh
+    chmod +x build_emscripten.sh
+    ./prepare_icu.sh
+    ./build_emscripten.sh
   displayName: 'Build Libraries'
 
 - script: |
     cd emsdk
-    source ./emsdk_env.sh
+    . ./emsdk_env.sh
     cd ../Celestia
     mkdir build
     cd build
