@@ -1,8 +1,18 @@
 diff --git a/build_emscripten.sh b/build_emscripten.sh
-index 274ef53..7b82a44 100644
+index 2bfc777..f9bc059 100644
 --- a/build_emscripten.sh
 +++ b/build_emscripten.sh
-@@ -8,60 +8,59 @@ TARGET="Emscripten"
+@@ -4,8 +4,7 @@ cd `dirname $0`
+ 
+ TARGET="Emscripten"
+ 
+-LIB_PATH="$1/libs"
+-INCLUDE_PATH="$1/include"
++RESULT_PATH=$1
+ 
+ EMSDK_ROOT=$2
+ 
+@@ -13,60 +12,59 @@ EMSDK_ROOT=$2
  . `pwd`/cmake.sh
  . `pwd`/versions.sh
  
@@ -109,7 +119,7 @@ index 274ef53..7b82a44 100644
  
  # gettext
  
-@@ -71,7 +70,7 @@ compile_gettext()
+@@ -76,7 +74,7 @@ compile_gettext()
    unarchive_and_enter $GETTEXT_VERSION ".tar.gz"
    cd gettext-runtime
  
@@ -118,7 +128,7 @@ index 274ef53..7b82a44 100644
    ./configure --disable-dependency-tracking \
                --disable-silent-rules \
                --disable-debug \
-@@ -101,12 +100,6 @@ compile_gettext()
+@@ -106,12 +104,6 @@ compile_gettext()
    make -j4 install
    check_success
  
@@ -131,7 +141,7 @@ index 274ef53..7b82a44 100644
    echo "Cleaning"
    cd ../..
    rm -rf $GETTEXT_VERSION
-@@ -145,15 +138,18 @@ compile_lua()
+@@ -150,15 +142,18 @@ compile_lua()
    NEW_STRING="AR= ${AR} rcu"
    sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" src/Makefile
  
@@ -155,7 +165,7 @@ index 274ef53..7b82a44 100644
    check_success
  
    echo "Cleaning"
-@@ -163,35 +159,35 @@ compile_lua()
+@@ -168,42 +163,35 @@ compile_lua()
  
  configure_emscripten
  compile_lua
@@ -170,7 +180,14 @@ index 274ef53..7b82a44 100644
 -  mkdir build
 -  cd build
 -
--  meson --buildtype=release --default-library=static -Dtests=false --prefix=`pwd`/output --cross-file ../../emscripten.txt
+-  OPTIONS_FILE="../../emscripten.txt"
+-
+-  echo "Replacing SDK"
+-  TO_REPLACE="/Users/linfel/Developer/Personal/Celestia/emsdk"
+-  NEW_STRING="$EMSDK_ROOT"
+-  sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" $OPTIONS_FILE
+-
+-  meson --buildtype=release --default-library=static -Dtests=false --prefix=`pwd`/output --cross-file $OPTIONS_FILE
 -  ninja install
 -  check_success
 -
@@ -220,7 +237,7 @@ index 274ef53..7b82a44 100644
  
  # icu
  
-@@ -207,7 +203,7 @@ compile_icu()
+@@ -219,7 +207,7 @@ compile_icu()
    sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" source/tools/pkgdata/pkgdata.cpp
    check_success
  
@@ -229,7 +246,7 @@ index 274ef53..7b82a44 100644
    ./source/configure --disable-samples \
                --disable-tests \
                --disable-extras \
-@@ -224,15 +220,6 @@ compile_icu()
+@@ -236,15 +224,6 @@ compile_icu()
    make -j8 install
    check_success
  
@@ -245,7 +262,7 @@ index 274ef53..7b82a44 100644
    echo "Cleaning"
    cd ..
    rm -rf $ICU_VERSION
-@@ -240,17 +227,16 @@ compile_icu()
+@@ -252,17 +231,16 @@ compile_icu()
  
  configure_emscripten
  compile_icu
@@ -275,7 +292,7 @@ index 274ef53..7b82a44 100644
 +cp miniaudio.h $RESULT_PATH/include/
  cd ..
 diff --git a/cmake.sh b/cmake.sh
-index 23b0795..13b6597 100644
+index 4d9764a..f43eece 100644
 --- a/cmake.sh
 +++ b/cmake.sh
 @@ -16,7 +16,11 @@ build_with_cmake_arch()
@@ -336,17 +353,3 @@ index 23b0795..13b6597 100644
      fi
    fi
  
-diff --git a/common.sh b/common.sh
-index 5992622..dd1a2d7 100644
---- a/common.sh
-+++ b/common.sh
-@@ -197,8 +197,7 @@ elif [ "$TARGET" = "Linux" ]; then
-   INCLUDE_PATH="$(pwd)/linux/include"
-   CMAKE=cmake
- elif [ "$TARGET" = "Emscripten" ]; then
--  LIB_PATH="$(pwd)/emscripten/libs"
--  INCLUDE_PATH="$(pwd)/emscripten/include"
-+  RESULT_PATH="$(pwd)/emscripten"
-   CMAKE=cmake
- else
-   echo "Unknown target"

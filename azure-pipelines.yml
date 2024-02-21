@@ -43,7 +43,9 @@ steps:
     git apply ../celestia-web/patches/celestia.build.patch --ignore-whitespace --whitespace=nowarn
   displayName: 'Apply Patch (Build)'
 
-- script: brew install wget unzip gperf gettext cmake
+- script: |
+    rm -rf /usr/local/bin/*3.12*
+    brew install meson wget cmake zsh
   displayName: 'Install Dependencies'
 
 - script: |
@@ -103,22 +105,13 @@ steps:
 
 - script: |
     cd apple-android
-    TO_REPLACE="Xcode.app"
-    NEW_STRING="Xcode_$(xcodeVersion).app"
-    sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" *.txt
-    TO_REPLACE="/Users/linfel/Developer/Personal/Celestia/emsdk"
-    NEW_STRING="$(pwd)/emsdk"
-    sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" emscripten.txt
-  displayName: 'Replace Strings'
-
-- script: |
-    cd apple-android
     chmod +x download.sh
     ./download.sh
   displayName: 'Download'
 
 - script: |
     cd emsdk
+    SDK_PATH=$(pwd)
     . ./emsdk_env.sh
     cd ../apple-android
     sudo xcode-select -s /Applications/Xcode_$(xcodeVersion).app
@@ -126,7 +119,7 @@ steps:
     chmod +x prepare_icu.sh
     chmod +x build_emscripten.sh
     ./prepare_icu.sh
-    ./build_emscripten.sh
+    ./build_emscripten.sh $(pwd)/emscripten $SDK_PATH
   displayName: 'Build Libraries'
 
 - script: |
