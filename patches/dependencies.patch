@@ -1,5 +1,5 @@
 diff --git a/build_emscripten.sh b/build_emscripten.sh
-index 2bfc777..f9bc059 100644
+index d0fe442..460b8d8 100644
 --- a/build_emscripten.sh
 +++ b/build_emscripten.sh
 @@ -4,8 +4,7 @@ cd `dirname $0`
@@ -12,7 +12,7 @@ index 2bfc777..f9bc059 100644
  
  EMSDK_ROOT=$2
  
-@@ -13,60 +12,59 @@ EMSDK_ROOT=$2
+@@ -13,62 +12,62 @@ EMSDK_ROOT=$2
  . `pwd`/cmake.sh
  . `pwd`/versions.sh
  
@@ -21,7 +21,7 @@ index 2bfc777..f9bc059 100644
 +mkdir -p $RESULT_PATH
  
  build_with_cmake "SDL2" $SDL2_VERSION ".tar.gz" "SDL2" "libSDL2" ".." "-DSDL_STATIC=ON" "-DSDL_SHARED=OFF" "-DSDL_TEST=OFF"
- build_with_cmake "jpeg" $JPEG_TURBO_VERSION ".tar.gz" "jpeg" "libjpeg" ".." "-DENABLE_STATIC=ON" "-DENABLE_SHARED=OFF" "-DWITH_TURBOJPEG=OFF"
+ build_with_cmake "jpeg" $JPEG_TURBO_VERSION ".tar.gz" "jpeg" "libjpeg" ".." "-DENABLE_STATIC=ON" "-DENABLE_SHARED=OFF" "-DWITH_TURBOJPEG=OFF" "-DWITH_SIMD=OFF"
  build_with_cmake "zlib" $ZLIB_VERSION ".tar.gz" "zlib" "libz" ".."
 -build_with_cmake "libpng" $LIBPNG_VERSION ".tar.xz" "libpng" "libpng" ".." "-DZLIB_LIBRARY=$LIB_PATH/libz.a" "-DZLIB_INCLUDE_DIR=$INCLUDE_PATH/zlib"
 -build_with_cmake "freetype" $FREETYPE_VERSION ".tar.xz" "freetype" "libfreetype" ".." "-DZLIB_LIBRARY=$LIB_PATH/libz.a" "-DZLIB_INCLUDE_DIR=$INCLUDE_PATH/zlib" "-DFT_DISABLE_BROTLI=ON" "-DFT_DISABLE_HARFBUZZ=ON" "-DFT_DISABLE_PNG=ON"
@@ -30,6 +30,8 @@ index 2bfc777..f9bc059 100644
  build_with_cmake "fmt" $FMT_VERSION ".tar.gz" "fmt" "libfmt" ".." "-DFMT_TEST=OFF" "-DBUILD_SHARED_LIBS=OFF"
  build_with_cmake "meshoptimizer" $MESHOPTIMIZER_VERSION ".tar.gz" "meshoptimizer" "libmeshoptimizer"
  build_with_cmake "eigen" $EIGEN_VERSION ".tar.gz"
+ # build_with_cmake "aom" $AOM_VERSION ".tar.gz" "aom" "libaom" ".." "-DCMAKE_CXX_STANDARD=17" "-DAOM_TARGET_CPU=CELESTIA_STANDARD_ARCH" "-DENABLE_DOCS=OFF" "-DBUILD_SHARED_LIBS=OFF" "-DENABLE_EXAMPLES=OFF"  "-DENABLE_TESTDATA=OFF" "-DENABLE_TESTS=OFF" "-DENABLE_TOOLS=OFF"
+-# build_with_cmake "libavif" $LIBAVIF_VERSION ".tar.gz" "libavif" "libavif" ".." "-DAVIF_BUILD_APPS=OFF" "-DBUILD_SHARED_LIBS=OFF" "-DAOM_INCLUDE_DIR=$INCLUDE_PATH/aom" "-DAOM_LIBRARY=$LIB_PATH/libaom.a" "-DCMAKE_DISABLE_FIND_PACKAGE_libsharpyuv=TRUE"  "-DCMAKE_DISABLE_FIND_PACKAGE_libyuv=TRUE" "-DAVIF_CODEC_AOM=SYSTEM"
 -
 -# CSPICE
 -
@@ -73,6 +75,8 @@ index 2bfc777..f9bc059 100644
 -
 -configure_emscripten
 -compile_cspice
++# build_with_cmake "libavif" $LIBAVIF_VERSION ".tar.gz" "libavif" "libavif" ".." "-DAVIF_BUILD_APPS=OFF" "-DBUILD_SHARED_LIBS=OFF" "-DAOM_INCLUDE_DIR=$RESULT_PATH/include/aom" "-DAOM_LIBRARY=$RESULT_PATH/lib/libaom.a" "-DCMAKE_DISABLE_FIND_PACKAGE_libsharpyuv=TRUE"  "-DCMAKE_DISABLE_FIND_PACKAGE_libyuv=TRUE" "-DAVIF_CODEC_AOM=SYSTEM"
++
 +#
 +## CSPICE
 +#
@@ -119,7 +123,7 @@ index 2bfc777..f9bc059 100644
  
  # gettext
  
-@@ -76,7 +74,7 @@ compile_gettext()
+@@ -78,7 +77,7 @@ compile_gettext()
    unarchive_and_enter $GETTEXT_VERSION ".tar.gz"
    cd gettext-runtime
  
@@ -128,7 +132,7 @@ index 2bfc777..f9bc059 100644
    ./configure --disable-dependency-tracking \
                --disable-silent-rules \
                --disable-debug \
-@@ -106,12 +104,6 @@ compile_gettext()
+@@ -108,12 +107,6 @@ compile_gettext()
    make -j4 install
    check_success
  
@@ -141,7 +145,7 @@ index 2bfc777..f9bc059 100644
    echo "Cleaning"
    cd ../..
    rm -rf $GETTEXT_VERSION
-@@ -150,15 +142,18 @@ compile_lua()
+@@ -152,15 +145,18 @@ compile_lua()
    NEW_STRING="AR= ${AR} rcu"
    sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" src/Makefile
  
@@ -165,7 +169,7 @@ index 2bfc777..f9bc059 100644
    check_success
  
    echo "Cleaning"
-@@ -168,42 +163,35 @@ compile_lua()
+@@ -170,42 +166,35 @@ compile_lua()
  
  configure_emscripten
  compile_lua
@@ -237,7 +241,7 @@ index 2bfc777..f9bc059 100644
  
  # icu
  
-@@ -219,7 +207,7 @@ compile_icu()
+@@ -221,7 +210,7 @@ compile_icu()
    sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" source/tools/pkgdata/pkgdata.cpp
    check_success
  
@@ -246,7 +250,7 @@ index 2bfc777..f9bc059 100644
    ./source/configure --disable-samples \
                --disable-tests \
                --disable-extras \
-@@ -236,15 +224,6 @@ compile_icu()
+@@ -238,15 +227,6 @@ compile_icu()
    make -j8 install
    check_success
  
@@ -262,7 +266,7 @@ index 2bfc777..f9bc059 100644
    echo "Cleaning"
    cd ..
    rm -rf $ICU_VERSION
-@@ -252,17 +231,16 @@ compile_icu()
+@@ -254,17 +234,16 @@ compile_icu()
  
  configure_emscripten
  compile_icu
@@ -292,10 +296,10 @@ index 2bfc777..f9bc059 100644
 +cp miniaudio.h $RESULT_PATH/include/
  cd ..
 diff --git a/cmake.sh b/cmake.sh
-index 4d9764a..f43eece 100644
+index 4092e76..7129477 100644
 --- a/cmake.sh
 +++ b/cmake.sh
-@@ -16,7 +16,11 @@ build_with_cmake_arch()
+@@ -16,7 +16,11 @@ _build_with_cmake_arch()
    mkdir build
    cd build
  
@@ -308,11 +312,11 @@ index 4d9764a..f43eece 100644
  
    if [ "$TARGET" = "iOS" ]; then
      echo "Building for iOS"
-@@ -134,26 +138,25 @@ build_with_cmake_arch()
+@@ -137,26 +141,25 @@ _build_with_cmake_arch()
  
    cd ..
  
--  if [ -z "$4" ] || [ "$4" = "dummy" ]; then
+-  if [ -z "$4" ] || [ "$4" = "none" ]; then
 -    HEADER_PATH=$INCLUDE_PATH
 -  else
 -    HEADER_PATH=$INCLUDE_PATH/$4
@@ -322,7 +326,7 @@ index 4d9764a..f43eece 100644
 -  mkdir -p $HEADER_PATH
 -  cp -r $OUTPUT_PATH/include/* $HEADER_PATH
 -  check_success
--  if [ ! -z "$5" ] && [ "$5" != "dummy" ]; then
+-  if [ ! -z "$5" ] && [ "$5" != "none" ]; then
 -    if [ "$TARGET" = "Android" ]; then
 -      cp $OUTPUT_PATH/lib/$5.a $LIB_PATH/$1/$5.a
 -      check_success
@@ -331,7 +335,7 @@ index 4d9764a..f43eece 100644
 -      check_success
 +  if [ "$TARGET" != "Emscripten" ]; then
 +    echo "Copying products"
-+    if [ -z "$4" ] || [ "$4" = "dummy" ]; then
++    if [ -z "$4" ] || [ "$4" = "none" ]; then
 +      HEADER_PATH=$INCLUDE_PATH
      else
 -      cp $OUTPUT_PATH/lib/$5.a $LIB_PATH/${1}_$5.a
@@ -342,7 +346,7 @@ index 4d9764a..f43eece 100644
 +
 +    cp -r $OUTPUT_PATH/include/* $HEADER_PATH
 +    check_success
-+    if [ ! -z "$5" ] && [ "$5" != "dummy" ]; then
++    if [ ! -z "$5" ] && [ "$5" != "none" ]; then
 +      if [ "$TARGET" = "Android" ]; then
 +        cp $OUTPUT_PATH/lib/$5.a $LIB_PATH/$1/$5.a
 +        check_success
