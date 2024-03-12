@@ -44,6 +44,7 @@ steps:
   displayName: 'Apply Patch (Build)'
 
 - script: |
+    rm -rf /usr/local/bin/2to3* /usr/local/bin/idle3* /usr/local/bin/pydoc* /usr/local/bin/python* /usr/local/share/man/man1/python* /usr/local/lib/pkgconfig/python* /usr/local/Frameworks/Python.framework
     brew install wget cmake zsh gperf
   displayName: 'Install Dependencies'
 
