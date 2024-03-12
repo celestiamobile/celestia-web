@@ -1,0 +1,156 @@
+jobs:
+- job: Build
+  displayName: 'Build'
+  timeoutInMinutes: 120
+
+  pool:
+    vmImage: 'macos-13'
+
+  variables:
+    xcodeVersion: ${{ '15.2' }}
+
+  steps:
+  - checkout: self
+  - checkout: Celestia
+  - checkout: apple-android
+  - checkout: emsdk
+
+  - script: |
+      cd Celestia
+      git apply ../celestia-web/patches/gles.patch --ignore-whitespace --whitespace=nowarn
+    displayName: 'Apply Patch (OpenGLES)'
+
+  - script: |
+      cd Celestia
+      git apply ../celestia-web/patches/celestia.patch --ignore-whitespace --whitespace=nowarn
+    displayName: 'Apply Patch (Celestia)'
+
+  - script: |
+      cd Celestia
+      git apply ../celestia-web/patches/celestia.build.patch --ignore-whitespace --whitespace=nowarn
+    displayName: 'Apply Patch (Build)'
+
+  - script: |
+      rm -rf /usr/local/bin/2to3* /usr/local/bin/idle3* /usr/local/bin/pydoc* /usr/local/bin/python* /usr/local/share/man/man1/python* /usr/local/lib/pkgconfig/python* /usr/local/Frameworks/Python.framework
+      brew install wget cmake zsh gperf
+    displayName: 'Install Dependencies'
+
+  - script: |
+      cd apple-android
+      git apply ../celestia-web/patches/dependencies.patch --ignore-whitespace --whitespace=nowarn
+    displayName: 'Apply Patch (Libraries)'
+
+  - task: DownloadGitHubRelease@0
+    inputs:
+      connection: GithubAuth
+      userRepository: celestiamobile/Celestia
+      defaultVersionType: 'specificTag'
+      version: '1_4_3_rc1'
+      itemPattern: 'CelestiaResources1.4.3.zip'
+      downloadPath: '$(System.ArtifactsDirectory)'
+    displayName: 'Download Resources (Old)'
+
+  - task: DownloadGitHubRelease@0
+    inputs:
+      connection: GithubAuth
+      userRepository: celestiamobile/Celestia
+      defaultVersionType: 'specificTag'
+      version: '1_6_9_rc1'
+      itemPattern: 'CelestiaResources1.6.9.zip'
+      downloadPath: '$(System.ArtifactsDirectory)'
+    displayName: 'Download Resources'
+
+  - script: |
+      cd Celestia
+      unzip $(System.ArtifactsDirectory)/CelestiaResources1.6.9.zip -d .
+      unzip $(System.ArtifactsDirectory)/CelestiaResources1.4.3.zip -d old
+    displayName: 'Unzip Resources'
+
+  - script: |
+      cd Celestia
+
+      rm -rf CelestiaResources/data
+      rm -rf CelestiaResources/textures
+      rm -rf CelestiaResources/models
+      rm -rf CelestiaResources/extras
+      rm -rf CelestiaResources/extras-standard
+      rsync -rv --quiet --exclude='CMakeLists.txt' old/CelestiaResources/data CelestiaResources
+      rsync -rv --quiet --exclude='CMakeLists.txt' old/CelestiaResources/textures CelestiaResources
+      rsync -rv --quiet --exclude='CMakeLists.txt' old/CelestiaResources/models CelestiaResources
+      rsync -rv --quiet --exclude='CMakeLists.txt' old/CelestiaResources/extras-standard CelestiaResources
+
+      rm -rf CelestiaResources/shaders
+      rsync -rv --quiet --exclude='CMakeLists.txt' shaders CelestiaResources
+      rsync -rv --quiet --exclude='CMakeLists.txt' fonts CelestiaResources
+    displayName: 'Fix Resources'
+
+  - script: |
+      cd emsdk
+      ./emsdk install latest
+      ./emsdk activate latest
+    displayName: 'Install Emscripten'
+
+  - script: |
+      cd apple-android
+      chmod +x download.sh
+      ./download.sh
+    displayName: 'Download'
+
+  - script: |
+      cd emsdk
+      SDK_PATH=$(pwd)
+      . ./emsdk_env.sh
+      cd ../apple-android
+      sudo xcode-select -s /Applications/Xcode_$(xcodeVersion).app
+      xcodebuild -version
+      chmod +x prepare_icu.sh
+      chmod +x build_emscripten.sh
+      ./prepare_icu.sh
+      ./build_emscripten.sh $(pwd)/emscripten $SDK_PATH
+    displayName: 'Build Libraries'
+
+  - script: |
+      cd emsdk
+      . ./emsdk_env.sh
+      cd ../Celestia
+      mkdir build
+      cd build
+      emcmake cmake ../ -DENABLE_QT5=OFF \
+                        -DENABLE_SDL=ON \
+                        -DENABLE_SPICE=OFF \
+                        -DENABLE_GLES=ON \
+                        -DENABLE_MINIAUDIO=ON \
+                        -DENABLE_CELX=ON \
+                        -DUSE_ICU=ON \
+                        -DENABLE_NLS=ON \
+                        -DCMAKE_BUILD_TYPE=Release \
+                        -DCMAKE_INSTALL_PREFIX=`pwd`/output \
+                        -DIntl_IS_BUILT_IN=OFF \
+                        -DLUA_LIBRARY=$(System.DefaultWorkingDirectory)/apple-android/emscripten/lib/liblua.a \
+                        -DLUA_LIBRARIES=$(System.DefaultWorkingDirectory)/apple-android/emscripten/lib/liblua.a \
+                        -DLUA_INCLUDE_DIR=$(System.DefaultWorkingDirectory)/apple-android/emscripten/include \
+                        -DADDITIONAL_FIND_ROOT_PATH=$(System.DefaultWorkingDirectory)/apple-android/emscripten
+      make -j4 install
+    displayName: 'Build Celestia'
+
+  - script: |
+      TO_REPLACE='var PACKAGE_NAME="celestia-sdl.data";var REMOTE_PACKAGE_BASE="celestia-sdl.data"'
+      NEW_STRING='var PACKAGE_NAME=window.dataBinaryFileOverride;var REMOTE_PACKAGE_BASE=window.dataBinaryFileOverride;'
+      sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" Celestia/build/src/celestia/sdl/celestia-sdl.js
+      TO_REPLACE='wasmBinaryFile="celestia-sdl.wasm";if(!isDataURI(wasmBinaryFile)){wasmBinaryFile=locateFile(wasmBinaryFile)}'
+      NEW_STRING='wasmBinaryFile=window.wasmBinaryFileOverride;'
+      sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" Celestia/build/src/celestia/sdl/celestia-sdl.js
+
+      rm -rf $(Build.ArtifactStagingDirectory)/*
+      cp celestia-web/index.html $(Build.ArtifactStagingDirectory)
+      cp Celestia/build/src/celestia/sdl/celestia-sdl.js $(Build.ArtifactStagingDirectory)
+      cp Celestia/build/src/celestia/sdl/celestia-sdl.wasm $(Build.ArtifactStagingDirectory)
+      cp Celestia/build/src/celestia/sdl/celestia-sdl.data $(Build.ArtifactStagingDirectory)
+    displayName: 'Fix References'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: 'web'
+      publishLocation: 'Container'
+    displayName: 'Publish Artifacts'
