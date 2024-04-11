@@ -1,5 +1,5 @@
 diff --git a/src/celestia/sdl/sdlmain.cpp b/src/celestia/sdl/sdlmain.cpp
-index f49d926b..56bdf541 100644
+index b2b73d15..dd3bac87 100644
 --- a/src/celestia/sdl/sdlmain.cpp
 +++ b/src/celestia/sdl/sdlmain.cpp
 @@ -10,6 +10,7 @@
@@ -17,8 +17,8 @@ index f49d926b..56bdf541 100644
 +#include <celestia/progressnotifier.h>
  #include <celestia/url.h>
  #include <celutil/gettext.h>
- #include <celutil/tzutil.h>
-@@ -186,12 +188,24 @@ SDL_Application::display()
+ #include <celutil/localeutil.h>
+@@ -191,12 +193,24 @@ SDL_Application::display()
      SDL_GL_SwapWindow(m_mainWindow);
  }
  
@@ -44,8 +44,8 @@ index f49d926b..56bdf541 100644
          return false;
      if (float screenDpi = 96.0f; SDL_GetDisplayDPI(0, &screenDpi, nullptr, nullptr) == 0)
          m_appCore->setScreenDpi(static_cast<int>(screenDpi));
-@@ -657,25 +671,13 @@ sdlmain(int /* argc */, char ** /* argv */)
-     setlocale(LC_NUMERIC, "C");
+@@ -662,25 +676,13 @@ sdlmain(int /* argc */, char ** /* argv */)
+     CelestiaCore::initLocale();
  
  #ifdef ENABLE_NLS
 -    bindtextdomain("celestia", LOCALEDIR);

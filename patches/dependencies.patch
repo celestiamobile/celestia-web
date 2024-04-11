@@ -1,5 +1,5 @@
 diff --git a/build_emscripten.sh b/build_emscripten.sh
-index d0fe442..460b8d8 100644
+index 4877443..640d10a 100644
 --- a/build_emscripten.sh
 +++ b/build_emscripten.sh
 @@ -4,8 +4,7 @@ cd `dirname $0`
@@ -12,7 +12,7 @@ index d0fe442..460b8d8 100644
  
  EMSDK_ROOT=$2
  
-@@ -13,62 +12,62 @@ EMSDK_ROOT=$2
+@@ -13,65 +12,64 @@ EMSDK_ROOT=$2
  . `pwd`/cmake.sh
  . `pwd`/versions.sh
  
@@ -20,6 +20,7 @@ index d0fe442..460b8d8 100644
 -mkdir -p $INCLUDE_PATH
 +mkdir -p $RESULT_PATH
  
+ build_with_cmake "boost" $BOOST_VERSION ".tar.xz" "boost" "libboost_container" ".." "-DBOOST_INCLUDE_LIBRARIES='container;smart_ptr'" "-DBUILD_SHARED_LIBS=OFF" "-DCMAKE_CXX_FLAGS=-pthread"
  build_with_cmake "SDL2" $SDL2_VERSION ".tar.gz" "SDL2" "libSDL2" ".." "-DSDL_STATIC=ON" "-DSDL_SHARED=OFF" "-DSDL_TEST=OFF"
  build_with_cmake "jpeg" $JPEG_TURBO_VERSION ".tar.gz" "jpeg" "libjpeg" ".." "-DENABLE_STATIC=ON" "-DENABLE_SHARED=OFF" "-DWITH_TURBOJPEG=OFF" "-DWITH_SIMD=OFF"
  build_with_cmake "zlib" $ZLIB_VERSION ".tar.gz" "zlib" "libz" ".."
@@ -38,6 +39,7 @@ index d0fe442..460b8d8 100644
 -echo "Building CSPICE"
 -compile_cspice()
 -{
+-  wget "https://naif.jpl.nasa.gov/pub/naif/toolkit/C/MacIntel_OSX_AppleC_64bit/packages/$CSPICE_VERSION.tar.Z" --no-check-certificate
 -  unarchive_and_enter $CSPICE_VERSION ".tar.Z"
 -
 -  echo "Applying patch 1"
@@ -71,18 +73,19 @@ index d0fe442..460b8d8 100644
 -  echo "Cleaning"
 -  cd ..
 -  rm -rf $CSPICE_VERSION
+-  rm -rf "$CSPICE_VERSION.tar.Z"
 -}
 -
 -configure_emscripten
 -compile_cspice
 +# build_with_cmake "libavif" $LIBAVIF_VERSION ".tar.gz" "libavif" "libavif" ".." "-DAVIF_BUILD_APPS=OFF" "-DBUILD_SHARED_LIBS=OFF" "-DAOM_INCLUDE_DIR=$RESULT_PATH/include/aom" "-DAOM_LIBRARY=$RESULT_PATH/lib/libaom.a" "-DCMAKE_DISABLE_FIND_PACKAGE_libsharpyuv=TRUE"  "-DCMAKE_DISABLE_FIND_PACKAGE_libyuv=TRUE" "-DAVIF_CODEC_AOM=SYSTEM"
-+
 +#
 +## CSPICE
 +#
 +#echo "Building CSPICE"
 +#compile_cspice()
 +#{
++#  wget "https://naif.jpl.nasa.gov/pub/naif/toolkit/C/MacIntel_OSX_AppleC_64bit/packages/$CSPICE_VERSION.tar.Z" --no-check-certificate
 +#  unarchive_and_enter $CSPICE_VERSION ".tar.Z"
 +#
 +#  echo "Applying patch 1"
@@ -116,6 +119,7 @@ index d0fe442..460b8d8 100644
 +#  echo "Cleaning"
 +#  cd ..
 +#  rm -rf $CSPICE_VERSION
++#  rm -rf "$CSPICE_VERSION.tar.Z"
 +#}
 +#
 +#configure_emscripten
@@ -123,7 +127,7 @@ index d0fe442..460b8d8 100644
  
  # gettext
  
-@@ -78,7 +77,7 @@ compile_gettext()
+@@ -81,7 +79,7 @@ compile_gettext()
    unarchive_and_enter $GETTEXT_VERSION ".tar.gz"
    cd gettext-runtime
  
@@ -132,7 +136,7 @@ index d0fe442..460b8d8 100644
    ./configure --disable-dependency-tracking \
                --disable-silent-rules \
                --disable-debug \
-@@ -108,12 +107,6 @@ compile_gettext()
+@@ -111,12 +109,6 @@ compile_gettext()
    make -j4 install
    check_success
  
@@ -145,7 +149,7 @@ index d0fe442..460b8d8 100644
    echo "Cleaning"
    cd ../..
    rm -rf $GETTEXT_VERSION
-@@ -152,15 +145,18 @@ compile_lua()
+@@ -155,15 +147,18 @@ compile_lua()
    NEW_STRING="AR= ${AR} rcu"
    sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" src/Makefile
  
@@ -169,7 +173,7 @@ index d0fe442..460b8d8 100644
    check_success
  
    echo "Cleaning"
-@@ -170,42 +166,35 @@ compile_lua()
+@@ -173,42 +168,35 @@ compile_lua()
  
  configure_emscripten
  compile_lua
@@ -241,7 +245,7 @@ index d0fe442..460b8d8 100644
  
  # icu
  
-@@ -221,7 +210,7 @@ compile_icu()
+@@ -224,7 +212,7 @@ compile_icu()
    sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" source/tools/pkgdata/pkgdata.cpp
    check_success
  
@@ -250,7 +254,7 @@ index d0fe442..460b8d8 100644
    ./source/configure --disable-samples \
                --disable-tests \
                --disable-extras \
-@@ -238,15 +227,6 @@ compile_icu()
+@@ -241,15 +229,6 @@ compile_icu()
    make -j8 install
    check_success
  
@@ -266,7 +270,7 @@ index d0fe442..460b8d8 100644
    echo "Cleaning"
    cd ..
    rm -rf $ICU_VERSION
-@@ -254,17 +234,16 @@ compile_icu()
+@@ -257,17 +236,16 @@ compile_icu()
  
  configure_emscripten
  compile_icu
