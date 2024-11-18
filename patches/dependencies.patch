@@ -1,5 +1,5 @@
 diff --git a/build_emscripten.sh b/build_emscripten.sh
-index 4877443..640d10a 100644
+index b1de306..ff88923 100644
 --- a/build_emscripten.sh
 +++ b/build_emscripten.sh
 @@ -4,8 +4,7 @@ cd `dirname $0`
@@ -173,17 +173,16 @@ index 4877443..640d10a 100644
    check_success
  
    echo "Cleaning"
-@@ -173,42 +168,35 @@ compile_lua()
- 
+@@ -174,41 +169,41 @@ compile_lua()
  configure_emscripten
  compile_lua
--
+ 
 -# libepoxy
 -
 -echo "Building libepoxy"
 -compile_libepoxy()
 -{
--  unarchive_and_enter $LIBEPOXY_VERSION ".tar.xz"
+-  unarchive_and_enter $LIBEPOXY_VERSION ".tar.gz"
 -
 -  mkdir build
 -  cd build
@@ -213,18 +212,24 @@ index 4877443..640d10a 100644
 -}
 -
 -compile_libepoxy
-+#
 +## libepoxy
 +#
 +#echo "Building libepoxy"
 +#compile_libepoxy()
 +#{
-+#  unarchive_and_enter $LIBEPOXY_VERSION ".tar.xz"
++#  unarchive_and_enter $LIBEPOXY_VERSION ".tar.gz"
 +#
 +#  mkdir build
 +#  cd build
 +#
-+#  meson --buildtype=release --default-library=static -Dtests=false --prefix=`pwd`/output --cross-file ../../emscripten.txt
++#  OPTIONS_FILE="../../emscripten.txt"
++#
++#  echo "Replacing SDK"
++#  TO_REPLACE="/Users/linfel/Developer/Personal/Celestia/emsdk"
++#  NEW_STRING="$EMSDK_ROOT"
++#  sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" $OPTIONS_FILE
++#
++#  meson --buildtype=release --default-library=static -Dtests=false --prefix=`pwd`/output --cross-file $OPTIONS_FILE
 +#  ninja install
 +#  check_success
 +#
@@ -245,7 +250,7 @@ index 4877443..640d10a 100644
  
  # icu
  
-@@ -224,7 +212,7 @@ compile_icu()
+@@ -224,7 +219,7 @@ compile_icu()
    sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" source/tools/pkgdata/pkgdata.cpp
    check_success
  
@@ -254,7 +259,7 @@ index 4877443..640d10a 100644
    ./source/configure --disable-samples \
                --disable-tests \
                --disable-extras \
-@@ -241,15 +229,6 @@ compile_icu()
+@@ -241,15 +236,6 @@ compile_icu()
    make -j8 install
    check_success
  
@@ -270,7 +275,7 @@ index 4877443..640d10a 100644
    echo "Cleaning"
    cd ..
    rm -rf $ICU_VERSION
-@@ -257,17 +236,16 @@ compile_icu()
+@@ -257,17 +243,16 @@ compile_icu()
  
  configure_emscripten
  compile_icu
@@ -300,7 +305,7 @@ index 4877443..640d10a 100644
 +cp miniaudio.h $RESULT_PATH/include/
  cd ..
 diff --git a/cmake.sh b/cmake.sh
-index 4092e76..7129477 100644
+index dab8bd7..1eaf5a1 100644
 --- a/cmake.sh
 +++ b/cmake.sh
 @@ -16,7 +16,11 @@ _build_with_cmake_arch()

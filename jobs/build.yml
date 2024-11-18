@@ -4,10 +4,10 @@ jobs:
   timeoutInMinutes: 120
 
   pool:
-    vmImage: 'macos-14'
+    vmImage: 'macos-15'
 
   variables:
-    xcodeVersion: ${{ '16.0' }}
+    xcodeVersion: ${{ '16.1' }}
 
   steps:
   - checkout: self
