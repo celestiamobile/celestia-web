@@ -1,5 +1,5 @@
 diff --git a/build_emscripten.sh b/build_emscripten.sh
-index b1de306..ff88923 100644
+index 7269fe2..c6518f5 100644
 --- a/build_emscripten.sh
 +++ b/build_emscripten.sh
 @@ -4,8 +4,7 @@ cd `dirname $0`
@@ -60,7 +60,7 @@ index b1de306..ff88923 100644
 -  export TKCOMPILER=$CC
 -  export TKCOMPILEOPTIONS="-c -ansi -O2 -fPIC -DNON_UNIX_STDIO"
 -  export TKLINKOPTIONS="-lm"
--  csh mkprodct.csh
+-  tcsh mkprodct.csh
 -  check_success
 -  cd ../..
 -
@@ -106,7 +106,7 @@ index b1de306..ff88923 100644
 +#  export TKCOMPILER=$CC
 +#  export TKCOMPILEOPTIONS="-c -ansi -O2 -fPIC -DNON_UNIX_STDIO"
 +#  export TKLINKOPTIONS="-lm"
-+#  csh mkprodct.csh
++#  tcsh mkprodct.csh
 +#  check_success
 +#  cd ../..
 +#
@@ -128,7 +128,7 @@ index b1de306..ff88923 100644
  # gettext
  
 @@ -81,7 +79,7 @@ compile_gettext()
-   unarchive_and_enter $GETTEXT_VERSION ".tar.gz"
+   unarchive_and_enter $GETTEXT_LEGACY_VERSION ".tar.gz"
    cd gettext-runtime
  
 -  OUTPUT_PATH="$(pwd)/output"
@@ -148,7 +148,7 @@ index b1de306..ff88923 100644
 -
    echo "Cleaning"
    cd ../..
-   rm -rf $GETTEXT_VERSION
+   rm -rf $GETTEXT_LEGACY_VERSION
 @@ -155,15 +147,18 @@ compile_lua()
    NEW_STRING="AR= ${AR} rcu"
    sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" src/Makefile
