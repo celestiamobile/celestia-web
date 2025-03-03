@@ -137,8 +137,8 @@ jobs:
       TO_REPLACE='var PACKAGE_NAME="celestia-sdl.data";var REMOTE_PACKAGE_BASE="celestia-sdl.data"'
       NEW_STRING='var PACKAGE_NAME=window.dataBinaryFileOverride;var REMOTE_PACKAGE_BASE=window.dataBinaryFileOverride;'
       sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" Celestia/build/src/celestia/sdl/celestia-sdl.js
-      TO_REPLACE='var f="celestia-sdl.wasm";if(!isDataURI(f)){return locateFile(f)}'
-      NEW_STRING='var f=window.wasmBinaryFileOverride;'
+      TO_REPLACE='return locateFile("celestia-sdl.wasm")'
+      NEW_STRING='return window.wasmBinaryFileOverride'
       sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" Celestia/build/src/celestia/sdl/celestia-sdl.js
 
       rm -rf $(Build.ArtifactStagingDirectory)/*
