@@ -1,5 +1,5 @@
 diff --git a/build_emscripten.sh b/build_emscripten.sh
-index 7269fe2..c6518f5 100644
+index 2a1141c..c8163c9 100644
 --- a/build_emscripten.sh
 +++ b/build_emscripten.sh
 @@ -4,8 +4,7 @@ cd `dirname $0`
@@ -30,7 +30,7 @@ index 7269fe2..c6518f5 100644
 +build_with_cmake "freetype" $FREETYPE_VERSION ".tar.xz" "freetype" "libfreetype" ".." "-DZLIB_LIBRARY=$RESULT_PATH/lib/libz.a" "-DZLIB_INCLUDE_DIR=$RESULT_PATH/include" "-DFT_DISABLE_BROTLI=ON" "-DFT_DISABLE_HARFBUZZ=ON" "-DFT_DISABLE_PNG=ON"
  build_with_cmake "fmt" $FMT_VERSION ".tar.gz" "fmt" "libfmt" ".." "-DFMT_TEST=OFF" "-DBUILD_SHARED_LIBS=OFF"
  build_with_cmake "meshoptimizer" $MESHOPTIMIZER_VERSION ".tar.gz" "meshoptimizer" "libmeshoptimizer"
- build_with_cmake "eigen" $EIGEN_VERSION ".tar.gz"
+ build_with_cmake "eigen3" $EIGEN_VERSION ".tar.gz"
  # build_with_cmake "aom" $AOM_VERSION ".tar.gz" "aom" "libaom" ".." "-DCMAKE_CXX_STANDARD=17" "-DAOM_TARGET_CPU=CELESTIA_STANDARD_ARCH" "-DENABLE_DOCS=OFF" "-DBUILD_SHARED_LIBS=OFF" "-DENABLE_EXAMPLES=OFF"  "-DENABLE_TESTDATA=OFF" "-DENABLE_TESTS=OFF" "-DENABLE_TOOLS=OFF"
 -# build_with_cmake "libavif" $LIBAVIF_VERSION ".tar.gz" "libavif" "libavif" ".." "-DAVIF_BUILD_APPS=OFF" "-DBUILD_SHARED_LIBS=OFF" "-DAOM_INCLUDE_DIR=$INCLUDE_PATH/aom" "-DAOM_LIBRARY=$LIB_PATH/libaom.a" "-DCMAKE_DISABLE_FIND_PACKAGE_libsharpyuv=TRUE"  "-DCMAKE_DISABLE_FIND_PACKAGE_libyuv=TRUE" "-DAVIF_CODEC_AOM=SYSTEM"
 -
@@ -305,7 +305,7 @@ index 7269fe2..c6518f5 100644
 +cp miniaudio.h $RESULT_PATH/include/
  cd ..
 diff --git a/cmake.sh b/cmake.sh
-index dab8bd7..1eaf5a1 100644
+index 0af6483..dbb9b66 100644
 --- a/cmake.sh
 +++ b/cmake.sh
 @@ -16,7 +16,11 @@ _build_with_cmake_arch()

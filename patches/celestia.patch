@@ -1,50 +1,94 @@
-diff --git a/src/celestia/sdl/sdlmain.cpp b/src/celestia/sdl/sdlmain.cpp
-index b2b73d15..dd3bac87 100644
---- a/src/celestia/sdl/sdlmain.cpp
-+++ b/src/celestia/sdl/sdlmain.cpp
-@@ -10,6 +10,7 @@
- #include <cctype>
- #include <cstdio>
- #include <cstring>
-+#include <iostream>
- #include <memory>
- #include <string_view>
- #include <system_error>
-@@ -18,6 +19,7 @@
- #include <celengine/glsupport.h>
+diff --git a/library.js b/library.js
+new file mode 100644
+index 00000000..37651210
+--- /dev/null
++++ b/library.js
+@@ -0,0 +1,9 @@
++addToLibrary({
++    celestiaLoadSuccess: function() {
++        loadSuccessCallback();
++    },
++    celestiaLoadFile: function(file, lenfile) {
++        const fileName = UTF8ToString(file, lenfile);
++        loadFileCallback(fileName);
++    },
++});
+\ No newline at end of file
+diff --git a/src/celestia/sdl/appwindow.cpp b/src/celestia/sdl/appwindow.cpp
+index 5178a3b7..72b2c12e 100644
+--- a/src/celestia/sdl/appwindow.cpp
++++ b/src/celestia/sdl/appwindow.cpp
+@@ -25,18 +25,36 @@
+ #endif
+ 
  #include <celestia/celestiacore.h>
- #include <celestia/configfile.h>
 +#include <celestia/progressnotifier.h>
- #include <celestia/url.h>
  #include <celutil/gettext.h>
- #include <celutil/localeutil.h>
-@@ -191,12 +193,24 @@ SDL_Application::display()
-     SDL_GL_SwapWindow(m_mainWindow);
- }
+ #include <celutil/tzutil.h>
+ #include "clipboard.h"
+ #include "gui.h"
+ #include "settings.h"
+ 
++extern "C" {
++    extern void celestiaLoadSuccess();
++    extern void celestiaLoadFile(const char *file, size_t lenfile);
++}
++
+ namespace celestia::sdl
+ {
+ 
+ namespace
+ {
  
 +class CelestiaCoreProgressWatcher: public ProgressNotifier
 +{
 +public:
-+    CelestiaCoreProgressWatcher() : ProgressNotifier() {};
++    CelestiaCoreProgressWatcher() : ProgressNotifier() {}
 +
 +    void update(const std::string& status)
 +    {
-+        std::cout << "Loading " << status << std::endl;
++        fmt::print("Loading: {}\n", status);
++        celestiaLoadFile(status.c_str(), status.size());
 +    }
 +};
 +
- bool
- SDL_Application::initCelestiaCore()
+ void
+ setTimezone(CelestiaCore& appCore)
  {
-     m_appCore = new CelestiaCore();
-     m_appCore->setAlerter(new SDL_Alerter());
+@@ -129,7 +147,7 @@ mainRunLoopHandler(void* arg)
+ {
+     auto app = static_cast<AppWindow*>(arg);
+     if (!app->update())
+-        emscripten_cancel_main_loop()
++        emscripten_cancel_main_loop();
+ }
+ #endif
+ 
+@@ -193,7 +211,8 @@ AppWindow::run(const Settings& settings)
+     m_appCore = std::make_unique<CelestiaCore>();
+     m_alerter = std::make_unique<Alerter>(m_window.get());
+     m_appCore->setAlerter(m_alerter.get());
 -    if (!m_appCore->initSimulation())
-+    CelestiaCoreProgressWatcher watcher;
-+    if (!m_appCore->initSimulation("celestia.cfg", {}, &watcher))
++    CelestiaCoreProgressWatcher progressWatcher;
++    if (!m_appCore->initSimulation("celestia.cfg", {}, &progressWatcher))
          return false;
+ 
      if (float screenDpi = 96.0f; SDL_GetDisplayDPI(0, &screenDpi, nullptr, nullptr) == 0)
-         m_appCore->setScreenDpi(static_cast<int>(screenDpi));
-@@ -662,25 +676,13 @@ sdlmain(int /* argc */, char ** /* argv */)
+@@ -211,6 +230,9 @@ AppWindow::run(const Settings& settings)
+ 
+     m_appCore->start();
+     setTimezone(*m_appCore);
++
++    celestiaLoadSuccess();
++
+     SDL_GL_GetDrawableSize(m_window.get(), &m_width, &m_height);
+     m_appCore->resize(m_width, m_height);
+ 
+diff --git a/src/celestia/sdl/sdlmain.cpp b/src/celestia/sdl/sdlmain.cpp
+index 75d63f06..7ebec9b7 100644
+--- a/src/celestia/sdl/sdlmain.cpp
++++ b/src/celestia/sdl/sdlmain.cpp
+@@ -25,9 +25,9 @@ main(int argc, char **argv)
      CelestiaCore::initLocale();
  
  #ifdef ENABLE_NLS
@@ -53,22 +97,28 @@ index b2b73d15..dd3bac87 100644
      bind_textdomain_codeset("celestia", "UTF-8");
 -    bindtextdomain("celestia-data", LOCALEDIR);
 +    bindtextdomain("celestia-data", "locale");
-     bind_textdomain_codeset("celestia-data", "UTF-8");
+     bind_textdomain_codeset("celestia", "UTF-8");
      textdomain("celestia");
  #endif
+@@ -39,21 +39,6 @@ main(int argc, char **argv)
+     if (!environment->setGLAttributes())
+         return EXIT_FAILURE;
  
--    const char *dataDir = getenv("CELESTIA_DATA_DIR");
--    if (dataDir == nullptr)
+-    fs::path dataDir;
+-#ifdef _WIN32
+-    if (const wchar_t* dataDirEnv = _wgetenv(L"CELESTIA_DATA_DIR"); dataDirEnv == nullptr)
+-#else
+-    if (const char* dataDirEnv = std::getenv("CELESTIA_DATA_DIR"); dataDirEnv == nullptr)
+-#endif
 -        dataDir = CONFIG_DATA_DIR;
+-    else
+-        dataDir = dataDirEnv;
 -
 -    std::error_code ec;
 -    fs::current_path(dataDir, ec);
 -    if (ec)
--    {
--        FatalError("Cannot chdir to {}, probably due to improper installation", dataDir);
--        return 1;
--    }
+-        return EXIT_FAILURE;
 -
-     auto app = SDL_Application::init("Celestia", 640, 480);
-     if (app == nullptr)
-     {
+     Settings settings = Settings::load(environment->getSettingsPath());
+ 
+     auto window = environment->createAppWindow(settings);

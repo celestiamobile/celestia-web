@@ -1,69 +1,38 @@
- <style>
-  #canvas { border: 0px none; background-color: black; width:100% }
-  #canvas-container {
-    width: 100%;
-  }
-  
-  #canvas-container #canvas {
-    width: 100%;
-    aspect-ratio:16/9
-  }
-  
-  @supports not (aspect-ratio: auto) {
-    .canvas-container {
-      position: relative;
-      padding-bottom: 56.25%;
-      height:0
-    }
-    
-    #canvas-container #canvas {
-      position: absolute;
-      width: 100%;
-      height:100%
-    }
-  }
-  #status { font-weight: bold; }
-  #progress { width: 100%; margin-top:0; }
-  #output {
-    width: 100%;
-    height: 200px;
-    margin: 0.4em 0 0 0;
-    border: 0px;
-    padding: 0px;
-    background-color: black;
-    color: white;
-    font-family: 'Lucida Console', Monaco, monospace;
-    outline: none;
-  }
+
+<style>
+  .fullscreen-content { border: 0px none; width: 100vw; height: 100vh; }
+  #status { color: white }
 </style>
-<p id="status">Downloading...</p>
-<progress value="0" max="100" id="progress" hidden=1></progress>
-<p id="canvas-container"><canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas></p>
-<textarea id="output" rows="8"></textarea>
+<div class="fullscreen-content" style="background-color:black;">
+  <canvas id="canvas" style="width:100%; height:100%; display:hidden; position:absolute; top:0; left:0;" oncontextmenu="event.preventDefault()"></canvas>
+  <div id="splash" style="width:100%; height:100%; position:absolute; top:0;left:0; display:flex; align-items:center; justify-content:center; flex-direction: column;">
+    <img src="appicon.jpg" style="width:128px; height:128px; border-radius:20%"/>
+    <div id="status" style="text-align:center;margin-top:1em;">Loading</div>
+  </div>  
+</div>
+
 <script type='text/javascript'>
   window.wasmBinaryFileOverride = 'celestia-sdl.wasm';
   window.dataBinaryFileOverride = 'celestia-sdl.data';
-  var statusElement = document.getElementById('status');
-  var progressElement = document.getElementById('progress');
+  
+  const statusElement = document.getElementById('status');
+
+  function loadSuccessCallback() {
+    document.getElementById("canvas").style.display = "block";
+    document.getElementById("splash").style.display = "none";
+  }
+
+  function loadFileCallback(file) {
+    // This is not working yet...
+    // statusElement.innerText = file;
+  }
   
   var Module = {
     preRun: [],
     postRun: [],
     print: (function() {
-      var element = document.getElementById('output');
-      if (element) element.value = ''; // clear browser cache
       return function(text) {
-        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-        // These replacements are necessary if you render to raw HTML
-        //text = text.replace(/&/g, "&amp;");
-        //text = text.replace(/</g, "&lt;");
-        //text = text.replace(/>/g, "&gt;");
-        //text = text.replace('\n', '<br>', 'g');
         console.log(text);
-        if (element) {
-          element.value += text + "\n";
-          element.scrollTop = element.scrollHeight; // focus on bottom
-        }
       };
     })(),
     canvas: (function() {
@@ -77,25 +46,7 @@
       return canvas;
     })(),
     setStatus: function(text) {
-      if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
-      if (text === Module.setStatus.last.text) return;
-      var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
-      var now = Date.now();
-      if (m && now - Module.setStatus.last.time < 30) return; // if this is a progress update, skip it if too soon
-      Module.setStatus.last.time = now;
-      Module.setStatus.last.text = text;
-      if (m) {
-        text = m[1];
-        progressElement.value = parseInt(m[2])*100;
-        progressElement.max = parseInt(m[4])*100;
-        progressElement.style.display = 'inline-block';
-      } else {
-        progressElement.value = null;
-        progressElement.max = null;
-        progressElement.style.display = 'none';
-      }
       statusElement.innerText = text;
-      statusElement.style.display = (text == null || text.length === 0) ? 'none' : 'inline-block';
     },
     totalDependencies: 0,
     monitorRunDependencies: function(left) {
@@ -103,7 +54,7 @@
       Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
     }
   };
-  Module.setStatus('Downloading...');
+  Module.setStatus('Downloading Celestia data');
   window.onerror = function(event) {
     // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
     Module.setStatus('Exception thrown, see JavaScript console');

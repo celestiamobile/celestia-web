@@ -12,8 +12,16 @@ jobs:
   steps:
   - checkout: self
   - checkout: Celestia
+    fetchDepth: 0
   - checkout: apple-android
   - checkout: emsdk
+
+  - script: |
+      cd Celestia
+      git checkout $(BRANCH)
+      git submodule init thirdparty/imgui
+      git submodule update
+    displayName: 'Checkout Branch'
 
   - script: |
       cd Celestia
