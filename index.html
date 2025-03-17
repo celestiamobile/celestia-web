@@ -4,9 +4,9 @@
   #status { color: white }
 </style>
 <div class="fullscreen-content" style="background-color:black;">
-  <canvas id="canvas" style="width:100%; height:100%; display:hidden; position:absolute; top:0; left:0;" oncontextmenu="event.preventDefault()"></canvas>
+  <canvas id="canvas" style="width:100%; height:100%; visibility:hidden; position:absolute; top:0; left:0;" oncontextmenu="event.preventDefault()"></canvas>
   <div id="splash" style="width:100%; height:100%; position:absolute; top:0;left:0; display:flex; align-items:center; justify-content:center; flex-direction: column;">
-    <img src="appicon.jpg" style="width:128px; height:128px; border-radius:20%"/>
+    <img src="/img/appicon.jpg" alt="Celestia app icon" style="width:128px; height:128px; border-radius:20%"/>
     <div id="status" style="text-align:center;margin-top:1em;">Loading</div>
   </div>  
 </div>
@@ -18,7 +18,7 @@
   const statusElement = document.getElementById('status');
 
   function loadSuccessCallback() {
-    document.getElementById("canvas").style.display = "block";
+    document.getElementById("canvas").style.visibility = "visible";
     document.getElementById("splash").style.display = "none";
   }
 
