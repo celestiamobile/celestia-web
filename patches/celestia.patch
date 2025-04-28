@@ -15,7 +15,7 @@ index 00000000..37651210
 +});
 \ No newline at end of file
 diff --git a/src/celestia/sdl/appwindow.cpp b/src/celestia/sdl/appwindow.cpp
-index 5178a3b7..72b2c12e 100644
+index 68783578..72b2c12e 100644
 --- a/src/celestia/sdl/appwindow.cpp
 +++ b/src/celestia/sdl/appwindow.cpp
 @@ -25,18 +25,36 @@
@@ -55,15 +55,6 @@ index 5178a3b7..72b2c12e 100644
  void
  setTimezone(CelestiaCore& appCore)
  {
-@@ -129,7 +147,7 @@ mainRunLoopHandler(void* arg)
- {
-     auto app = static_cast<AppWindow*>(arg);
-     if (!app->update())
--        emscripten_cancel_main_loop()
-+        emscripten_cancel_main_loop();
- }
- #endif
- 
 @@ -193,7 +211,8 @@ AppWindow::run(const Settings& settings)
      m_appCore = std::make_unique<CelestiaCore>();
      m_alerter = std::make_unique<Alerter>(m_window.get());

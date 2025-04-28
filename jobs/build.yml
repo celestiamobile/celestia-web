@@ -7,7 +7,7 @@ jobs:
     vmImage: 'macos-15'
 
   variables:
-    xcodeVersion: ${{ '16.2' }}
+    xcodeVersion: ${{ '16.3' }}
 
   steps:
   - checkout: self
@@ -63,14 +63,14 @@ jobs:
       connection: GithubAuth
       userRepository: celestiamobile/Celestia
       defaultVersionType: 'specificTag'
-      version: '1_7_12_rc1'
-      itemPattern: 'CelestiaResources1.7.12.zip'
+      version: '1_8_0_rc1'
+      itemPattern: 'CelestiaResources1.8.0.zip'
       downloadPath: '$(System.ArtifactsDirectory)'
     displayName: 'Download Resources'
 
   - script: |
       cd Celestia
-      unzip $(System.ArtifactsDirectory)/CelestiaResources1.7.12.zip -d .
+      unzip $(System.ArtifactsDirectory)/CelestiaResources1.8.0.zip -d .
       unzip $(System.ArtifactsDirectory)/CelestiaResources1.4.3.zip -d old
     displayName: 'Unzip Resources'
 
