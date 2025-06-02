@@ -1,5 +1,5 @@
 diff --git a/build_emscripten.sh b/build_emscripten.sh
-index 2a1141c..c8163c9 100644
+index 828911a..408cbba 100644
 --- a/build_emscripten.sh
 +++ b/build_emscripten.sh
 @@ -4,8 +4,7 @@ cd `dirname $0`
@@ -12,7 +12,7 @@ index 2a1141c..c8163c9 100644
  
  EMSDK_ROOT=$2
  
-@@ -13,65 +12,64 @@ EMSDK_ROOT=$2
+@@ -13,8 +12,7 @@ EMSDK_ROOT=$2
  . `pwd`/cmake.sh
  . `pwd`/versions.sh
  
@@ -20,13 +20,15 @@ index 2a1141c..c8163c9 100644
 -mkdir -p $INCLUDE_PATH
 +mkdir -p $RESULT_PATH
  
- build_with_cmake "boost" $BOOST_VERSION ".tar.xz" "boost" "libboost_container" ".." "-DBOOST_INCLUDE_LIBRARIES='container;smart_ptr'" "-DBUILD_SHARED_LIBS=OFF" "-DCMAKE_CXX_FLAGS=-pthread"
+ TIMESTAMP=`git show --no-patch --format=%cd --date=format-local:'%Y%m%d'`
+ 
+@@ -22,58 +20,58 @@ build_with_cmake "boost" $BOOST_VERSION ".tar.xz" "boost" "libboost_container" "
  build_with_cmake "SDL2" $SDL2_VERSION ".tar.gz" "SDL2" "libSDL2" ".." "-DSDL_STATIC=ON" "-DSDL_SHARED=OFF" "-DSDL_TEST=OFF"
- build_with_cmake "jpeg" $JPEG_TURBO_VERSION ".tar.gz" "jpeg" "libjpeg" ".." "-DENABLE_STATIC=ON" "-DENABLE_SHARED=OFF" "-DWITH_TURBOJPEG=OFF" "-DWITH_SIMD=OFF"
+ build_with_cmake "jpeg" $JPEG_TURBO_VERSION ".tar.gz" "jpeg" "libjpeg" ".." "-DENABLE_STATIC=ON" "-DENABLE_SHARED=OFF" "-DWITH_TURBOJPEG=OFF" "-DWITH_SIMD=OFF" "-DBUILD=$TIMESTAMP"
  build_with_cmake "zlib" $ZLIB_VERSION ".tar.gz" "zlib" "libz" ".."
--build_with_cmake "libpng" $LIBPNG_VERSION ".tar.xz" "libpng" "libpng" ".." "-DZLIB_LIBRARY=$LIB_PATH/libz.a" "-DZLIB_INCLUDE_DIR=$INCLUDE_PATH/zlib"
+-build_with_cmake "libpng" $LIBPNG_VERSION ".tar.xz" "libpng" "libpng" ".." "-DZLIB_LIBRARY=$LIB_PATH/libz.a" "-DZLIB_INCLUDE_DIR=$INCLUDE_PATH/zlib" "-DPNG_SHARED=OFF"
 -build_with_cmake "freetype" $FREETYPE_VERSION ".tar.xz" "freetype" "libfreetype" ".." "-DZLIB_LIBRARY=$LIB_PATH/libz.a" "-DZLIB_INCLUDE_DIR=$INCLUDE_PATH/zlib" "-DFT_DISABLE_BROTLI=ON" "-DFT_DISABLE_HARFBUZZ=ON" "-DFT_DISABLE_PNG=ON"
-+build_with_cmake "libpng" $LIBPNG_VERSION ".tar.xz" "libpng" "libpng" ".." "-DZLIB_LIBRARY=$RESULT_PATH/lib/libz.a" "-DZLIB_INCLUDE_DIR=$RESULT_PATH/include"
++build_with_cmake "libpng" $LIBPNG_VERSION ".tar.xz" "libpng" "libpng" ".." "-DZLIB_LIBRARY=$RESULT_PATH/lib/libz.a" "-DZLIB_INCLUDE_DIR=$RESULT_PATH/include" "-DPNG_SHARED=OFF"
 +build_with_cmake "freetype" $FREETYPE_VERSION ".tar.xz" "freetype" "libfreetype" ".." "-DZLIB_LIBRARY=$RESULT_PATH/lib/libz.a" "-DZLIB_INCLUDE_DIR=$RESULT_PATH/include" "-DFT_DISABLE_BROTLI=ON" "-DFT_DISABLE_HARFBUZZ=ON" "-DFT_DISABLE_PNG=ON"
  build_with_cmake "fmt" $FMT_VERSION ".tar.gz" "fmt" "libfmt" ".." "-DFMT_TEST=OFF" "-DBUILD_SHARED_LIBS=OFF"
  build_with_cmake "meshoptimizer" $MESHOPTIMIZER_VERSION ".tar.gz" "meshoptimizer" "libmeshoptimizer"
@@ -127,7 +129,7 @@ index 2a1141c..c8163c9 100644
  
  # gettext
  
-@@ -81,7 +79,7 @@ compile_gettext()
+@@ -83,7 +81,7 @@ compile_gettext()
    unarchive_and_enter $GETTEXT_LEGACY_VERSION ".tar.gz"
    cd gettext-runtime
  
@@ -136,7 +138,7 @@ index 2a1141c..c8163c9 100644
    ./configure --disable-dependency-tracking \
                --disable-silent-rules \
                --disable-debug \
-@@ -111,12 +109,6 @@ compile_gettext()
+@@ -113,12 +111,6 @@ compile_gettext()
    make -j4 install
    check_success
  
@@ -149,7 +151,7 @@ index 2a1141c..c8163c9 100644
    echo "Cleaning"
    cd ../..
    rm -rf $GETTEXT_LEGACY_VERSION
-@@ -155,15 +147,18 @@ compile_lua()
+@@ -157,15 +149,18 @@ compile_lua()
    NEW_STRING="AR= ${AR} rcu"
    sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" src/Makefile
  
@@ -173,7 +175,7 @@ index 2a1141c..c8163c9 100644
    check_success
  
    echo "Cleaning"
-@@ -174,41 +169,41 @@ compile_lua()
+@@ -176,41 +171,41 @@ compile_lua()
  configure_emscripten
  compile_lua
  
@@ -250,7 +252,7 @@ index 2a1141c..c8163c9 100644
  
  # icu
  
-@@ -224,7 +219,7 @@ compile_icu()
+@@ -226,7 +221,7 @@ compile_icu()
    sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" source/tools/pkgdata/pkgdata.cpp
    check_success
  
@@ -259,7 +261,7 @@ index 2a1141c..c8163c9 100644
    ./source/configure --disable-samples \
                --disable-tests \
                --disable-extras \
-@@ -241,15 +236,6 @@ compile_icu()
+@@ -243,15 +238,6 @@ compile_icu()
    make -j8 install
    check_success
  
@@ -275,7 +277,7 @@ index 2a1141c..c8163c9 100644
    echo "Cleaning"
    cd ..
    rm -rf $ICU_VERSION
-@@ -257,17 +243,16 @@ compile_icu()
+@@ -259,17 +245,16 @@ compile_icu()
  
  configure_emscripten
  compile_icu
@@ -305,7 +307,7 @@ index 2a1141c..c8163c9 100644
 +cp miniaudio.h $RESULT_PATH/include/
  cd ..
 diff --git a/cmake.sh b/cmake.sh
-index 0af6483..dbb9b66 100644
+index 5cc89a8..983bcee 100644
 --- a/cmake.sh
 +++ b/cmake.sh
 @@ -16,7 +16,11 @@ _build_with_cmake_arch()
