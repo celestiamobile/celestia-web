@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 9dbc5493..a0e3eb74 100644
+index 1a0e09d4..af9687b5 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -102,6 +102,8 @@ endif()
@@ -22,10 +22,18 @@ index 9dbc5493..a0e3eb74 100644
    endif()
  endif()
  
-@@ -260,10 +262,6 @@ if(ENABLE_WIN OR ENABLE_TOOLS)
-   find_package(OpenGL REQUIRED)
+@@ -256,18 +258,6 @@ if(WIN32)
+   link_libraries("vfw32" "comctl32" "winmm")
  endif()
  
+-if(ENABLE_SDL OR ENABLE_WIN OR ENABLE_TOOLS)
+-  if(ENABLE_GLES)
+-    find_package(OpenGLES COMPONENTS V2 REQUIRED)
+-  else()
+-    find_package(OpenGL REQUIRED)
+-  endif()
+-endif()
+-
 -find_package(Libepoxy REQUIRED)
 -link_libraries(libepoxy::libepoxy)
 -include_directories(${LIBEPOXY_INCLUDE_DIR})
@@ -47,10 +55,20 @@ index bfef78b1..2e38421f 100644
                              ${CELESTIA_CORE_LIBS}
  )
 diff --git a/src/celestia/sdl/CMakeLists.txt b/src/celestia/sdl/CMakeLists.txt
-index 0a88ba97..23183660 100644
+index e4015ba3..b91fce60 100644
 --- a/src/celestia/sdl/CMakeLists.txt
 +++ b/src/celestia/sdl/CMakeLists.txt
-@@ -74,6 +74,8 @@ else()
+@@ -30,9 +30,6 @@ set(IMGUI_SOURCES
+ add_library(imgui STATIC ${IMGUI_SOURCES})
+ if(ENABLE_GLES)
+   target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_ES2)
+-  target_link_libraries(imgui PRIVATE OpenGLES::OpenGLESv2)
+-else()
+-  target_link_libraries(imgui PRIVATE OpenGL::GL)
+ endif()
+ 
+ target_include_directories(imgui PUBLIC "${IMGUI_DIR}" "${IMGUI_DIR}/backends" "${IMGUI_DIR}/misc/cpp")
+@@ -82,6 +79,8 @@ else()
    target_link_libraries(imgui PUBLIC ${SDL2_LIBRARIES})
  endif()
  
