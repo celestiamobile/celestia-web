@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 1a0e09d4..af9687b5 100644
+index 708c18e4..519c1db7 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -102,6 +102,8 @@ endif()
+@@ -95,6 +95,8 @@ endif()
  # Use our cmake files
  list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
  
@@ -11,7 +11,7 @@ index 1a0e09d4..af9687b5 100644
  # Require Windows 7
  if(WIN32)
    set(WINVER 0x0601)
-@@ -114,8 +116,8 @@ if(USE_ICU)
+@@ -107,8 +109,8 @@ if(USE_ICU)
      include(winicu)
      EnableWinICU()
    else()
@@ -22,7 +22,7 @@ index 1a0e09d4..af9687b5 100644
    endif()
  endif()
  
-@@ -256,18 +258,6 @@ if(WIN32)
+@@ -249,18 +251,6 @@ if(WIN32)
    link_libraries("vfw32" "comctl32" "winmm")
  endif()
  
@@ -42,10 +42,10 @@ index 1a0e09d4..af9687b5 100644
  message(STATUS "Found Eigen3 ${EIGEN3_VERSION_STRING}")
  link_libraries(Eigen3::Eigen)
 diff --git a/src/celestia/CMakeLists.txt b/src/celestia/CMakeLists.txt
-index bfef78b1..2e38421f 100644
+index 013a6f98..4da0862f 100644
 --- a/src/celestia/CMakeLists.txt
 +++ b/src/celestia/CMakeLists.txt
-@@ -95,7 +95,7 @@ list(GET PROJECT_VERSION_LIST 0 PROJECT_VERSION_MAJOR)
+@@ -94,7 +94,7 @@ list(GET PROJECT_VERSION_LIST 0 PROJECT_VERSION_MAJOR)
  list(GET PROJECT_VERSION_LIST 1 PROJECT_VERSION_MINOR)
  set(CELSO "celestia-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
  
@@ -55,7 +55,7 @@ index bfef78b1..2e38421f 100644
                              ${CELESTIA_CORE_LIBS}
  )
 diff --git a/src/celestia/sdl/CMakeLists.txt b/src/celestia/sdl/CMakeLists.txt
-index e4015ba3..b91fce60 100644
+index e9b9e1c1..fa388bab 100644
 --- a/src/celestia/sdl/CMakeLists.txt
 +++ b/src/celestia/sdl/CMakeLists.txt
 @@ -30,9 +30,6 @@ set(IMGUI_SOURCES
@@ -68,12 +68,12 @@ index e4015ba3..b91fce60 100644
  endif()
  
  target_include_directories(imgui PUBLIC "${IMGUI_DIR}" "${IMGUI_DIR}/backends" "${IMGUI_DIR}/misc/cpp")
-@@ -82,6 +79,8 @@ else()
-   target_link_libraries(imgui PUBLIC ${SDL2_LIBRARIES})
- endif()
- 
-+set_target_properties(celestia-sdl PROPERTIES LINK_FLAGS "--preload-file ${CMAKE_SOURCE_DIR}/CelestiaResources@/ --bind -sUSE_WEBGL2=1 -sGL_ENABLE_GET_PROC_ADDRESS -sTOTAL_MEMORY=419430400 --js-library ${CMAKE_SOURCE_DIR}/library.js")
+@@ -87,6 +84,8 @@ if(WIN32)
+     COMPONENT sdlgui
+   )
+ else()
++  set_target_properties(celestia-sdl PROPERTIES LINK_FLAGS "--preload-file ${CMAKE_SOURCE_DIR}/CelestiaResources@/ --bind -sUSE_WEBGL2=1 -sGL_ENABLE_GET_PROC_ADDRESS -sTOTAL_MEMORY=419430400 --js-library ${CMAKE_SOURCE_DIR}/library.js")
 +
- install(
-   TARGETS celestia-sdl
-   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+   install(
+     TARGETS celestia-sdl
+     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
