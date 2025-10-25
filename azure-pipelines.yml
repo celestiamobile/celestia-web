@@ -5,9 +5,10 @@ resources:
     endpoint: GithubAuth
     name: celestiamobile/Celestia
     ref: develop
-  - repository: apple-android
-    type: git
-    name: Celestia/apple-android
+  - repository: apple-android-dependencies
+    type: github
+    endpoint: GithubAuth
+    name: celestiamobile/apple-android-dependencies
   - repository: emsdk
     type: github
     endpoint: GithubAuth
@@ -22,3 +23,4 @@ stages:
   dependsOn: []
   jobs:
   - template: jobs/build.yml
+

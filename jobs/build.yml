@@ -13,7 +13,7 @@ jobs:
   - checkout: self
   - checkout: Celestia
     fetchDepth: 0
-  - checkout: apple-android
+  - checkout: apple-android-dependencies
   - checkout: emsdk
 
   - script: |
@@ -94,7 +94,7 @@ jobs:
     displayName: 'Install Emscripten'
 
   - script: |
-      cd apple-android
+      cd apple-android-dependencies
       chmod +x download.sh
       ./download.sh
     displayName: 'Download'
@@ -103,7 +103,7 @@ jobs:
       cd emsdk
       SDK_PATH=$(pwd)
       . ./emsdk_env.sh
-      cd ../apple-android
+      cd ../apple-android-dependencies
       sudo xcode-select -s /Applications/Xcode_$(xcodeVersion).app
       xcodebuild -version
       chmod +x prepare_icu.sh
@@ -129,10 +129,10 @@ jobs:
                         -DCMAKE_BUILD_TYPE=Release \
                         -DCMAKE_INSTALL_PREFIX=`pwd`/output \
                         -DIntl_IS_BUILT_IN=OFF \
-                        -DLUA_LIBRARY=$(System.DefaultWorkingDirectory)/apple-android/emscripten/lib/liblua.a \
-                        -DLUA_LIBRARIES=$(System.DefaultWorkingDirectory)/apple-android/emscripten/lib/liblua.a \
-                        -DLUA_INCLUDE_DIR=$(System.DefaultWorkingDirectory)/apple-android/emscripten/include \
-                        -DADDITIONAL_FIND_ROOT_PATH=$(System.DefaultWorkingDirectory)/apple-android/emscripten
+                        -DLUA_LIBRARY=$(System.DefaultWorkingDirectory)/apple-android-dependencies/emscripten/lib/liblua.a \
+                        -DLUA_LIBRARIES=$(System.DefaultWorkingDirectory)/apple-android-dependencies/emscripten/lib/liblua.a \
+                        -DLUA_INCLUDE_DIR=$(System.DefaultWorkingDirectory)/apple-android-dependencies/emscripten/include \
+                        -DADDITIONAL_FIND_ROOT_PATH=$(System.DefaultWorkingDirectory)/apple-android-dependencies/emscripten
       make -j4 install
     displayName: 'Build Celestia'
 
