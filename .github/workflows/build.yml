@@ -1,0 +1,203 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    inputs:
+      release_version:
+        description: 'Release Version (e.g. v1.0.0)'
+        required: false
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout celestia-web
+        uses: actions/checkout@v4
+        with:
+          path: celestia-web
+
+      - name: Checkout Celestia
+        uses: actions/checkout@v4
+        with:
+          repository: celestiamobile/Celestia
+          ref: develop
+          fetch-depth: 0
+          path: Celestia
+
+      - name: Checkout apple-android-dependencies
+        uses: actions/checkout@v4
+        with:
+          repository: celestiamobile/apple-android-dependencies
+          path: apple-android-dependencies
+
+      - name: Checkout emsdk
+        uses: actions/checkout@v4
+        with:
+          repository: emscripten-core/emsdk
+          path: emsdk
+
+      - name: Install Dependencies
+        run: |
+          brew install wget cmake zsh gperf tcsh
+
+      - name: Download Resources (Old)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download 1_4_3_rc1 -R celestiamobile/Celestia -p "CelestiaResources1.4.3.zip" --dir "${{ runner.temp }}/artifacts"
+
+      - name: Download Resources
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download 1_9_3_rc1 -R celestiamobile/Celestia -p "CelestiaResources1.9.3.zip" --dir "${{ runner.temp }}/artifacts"
+
+      - name: Checkout Branch
+        run: |
+          cd Celestia
+          # Azure Pipeline implies $(BRANCH) variable which wasn't clearly defined in the view_file output but usually implied triggers or set variables. 
+          # Assuming we just want to stay on the checked out ref (develop) or if there's logic needed.
+          # The azure script said: git checkout $(BRANCH). 
+          # GitHub Action behaves differently; we checked out 'develop' explicitly.
+          # We'll skip the git checkout $(BRANCH) since 'develop' is checked out by actions/checkout.
+          git submodule init thirdparty/imgui
+          git submodule update
+
+      - name: Apply Patch (OpenGLES)
+        run: |
+          cd Celestia
+          git apply ../celestia-web/patches/gles.patch --ignore-whitespace --whitespace=nowarn -3
+
+      - name: Apply Patch (Celestia)
+        run: |
+          cd Celestia
+          git apply ../celestia-web/patches/celestia.patch --ignore-whitespace --whitespace=nowarn -3
+
+      - name: Apply Patch (Build)
+        run: |
+          cd Celestia
+          git apply ../celestia-web/patches/celestia.build.patch --ignore-whitespace --whitespace=nowarn -3
+
+      - name: Unzip Resources
+        run: |
+          cd Celestia
+          unzip "${{ runner.temp }}/artifacts/CelestiaResources1.9.3.zip" -d .
+          unzip "${{ runner.temp }}/artifacts/CelestiaResources1.4.3.zip" -d old
+
+      - name: Fix Resources
+        run: |
+          cd Celestia
+          
+          rm -rf CelestiaResources/data
+          rm -rf CelestiaResources/textures
+          rm -rf CelestiaResources/models
+          rm -rf CelestiaResources/extras
+          rm -rf CelestiaResources/extras-standard
+          rsync -rv --quiet --exclude='CMakeLists.txt' old/CelestiaResources/data CelestiaResources
+          rsync -rv --quiet --exclude='CMakeLists.txt' old/CelestiaResources/textures CelestiaResources
+          rsync -rv --quiet --exclude='CMakeLists.txt' old/CelestiaResources/models CelestiaResources
+          rsync -rv --quiet --exclude='CMakeLists.txt' old/CelestiaResources/extras-standard CelestiaResources
+
+          rm -rf CelestiaResources/shaders
+          rsync -rv --quiet --exclude='CMakeLists.txt' shaders CelestiaResources
+          rsync -rv --quiet --exclude='CMakeLists.txt' fonts CelestiaResources
+
+      - name: Install Emscripten
+        run: |
+          cd emsdk
+          ./emsdk install latest
+          ./emsdk activate latest
+
+      - name: Download Apple/Android Dependencies
+        run: |
+          cd apple-android-dependencies
+          chmod +x download.sh
+          ./download.sh
+
+      - name: Build Libraries
+        run: |
+          cd emsdk
+          SDK_PATH=$(pwd)
+          . ./emsdk_env.sh
+          cd ../apple-android-dependencies
+          
+          
+          # Select Xcode
+          sudo xcode-select -s /Applications/Xcode_26.1.app
+          xcodebuild -version
+          
+          chmod +x prepare_icu.sh
+          chmod +x build_emscripten.sh
+          ./prepare_icu.sh
+          ./build_emscripten.sh $(pwd)/emscripten $SDK_PATH
+
+      - name: Build Celestia
+        run: |
+          cd emsdk
+          . ./emsdk_env.sh
+          cd ../Celestia
+          mkdir build
+          cd build
+          emcmake cmake ../ -DENABLE_QT5=OFF \
+                            -DENABLE_SDL=ON \
+                            -DENABLE_SPICE=OFF \
+                            -DENABLE_GLES=ON \
+                            -DENABLE_MINIAUDIO=ON \
+                            -DENABLE_CELX=ON \
+                            -DUSE_ICU=ON \
+                            -DENABLE_NLS=ON \
+                            -DCMAKE_BUILD_TYPE=Release \
+                            -DCMAKE_INSTALL_PREFIX=`pwd`/output \
+                            -DIntl_IS_BUILT_IN=OFF \
+                            -DLUA_LIBRARY=$GITHUB_WORKSPACE/apple-android-dependencies/emscripten/lib/liblua.a \
+                            -DLUA_LIBRARIES=$GITHUB_WORKSPACE/apple-android-dependencies/emscripten/lib/liblua.a \
+                            -DLUA_INCLUDE_DIR=$GITHUB_WORKSPACE/apple-android-dependencies/emscripten/include \
+                            -DADDITIONAL_FIND_ROOT_PATH=$GITHUB_WORKSPACE/apple-android-dependencies/emscripten
+          make -j4 install
+
+      - name: Fix References
+        run: |
+          # Define artifact staging directory similar to Azure
+          ARTIFACT_STAGING_DIR="${{ runner.temp }}/staging"
+          mkdir -p "$ARTIFACT_STAGING_DIR"
+          
+          TO_REPLACE='var PACKAGE_NAME="celestia-sdl.data";var REMOTE_PACKAGE_BASE="celestia-sdl.data"'
+          NEW_STRING='var PACKAGE_NAME=window.dataBinaryFileOverride;var REMOTE_PACKAGE_BASE=window.dataBinaryFileOverride;'
+          sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" Celestia/build/src/celestia/sdl/celestia-sdl.js
+          
+          TO_REPLACE='return locateFile("celestia-sdl.wasm")'
+          NEW_STRING='return window.wasmBinaryFileOverride'
+          sed -ie "s#${TO_REPLACE}#${NEW_STRING}#g" Celestia/build/src/celestia/sdl/celestia-sdl.js
+
+          cp celestia-web/index.html "$ARTIFACT_STAGING_DIR"
+          cp Celestia/build/src/celestia/sdl/celestia-sdl.js "$ARTIFACT_STAGING_DIR"
+          cp Celestia/build/src/celestia/sdl/celestia-sdl.wasm "$ARTIFACT_STAGING_DIR"
+          cp Celestia/build/src/celestia/sdl/celestia-sdl.data "$ARTIFACT_STAGING_DIR"
+
+      - name: Zip Artifacts
+        if: ${{ inputs.release_version != '' }}
+        run: |
+          cd "${{ runner.temp }}/staging"
+          zip -r ../web.zip .
+
+      - name: Create Release
+        if: ${{ inputs.release_version != '' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ inputs.release_version }}
+          files: ${{ runner.temp }}/web.zip
+          generate_release_notes: true
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: ${{ runner.temp }}/staging
+          retention-days: 30
