@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 708c18e4..519c1db7 100644
+index 033747df..f37ae305 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -95,6 +95,8 @@ endif()
@@ -22,7 +22,7 @@ index 708c18e4..519c1db7 100644
    endif()
  endif()
  
-@@ -249,18 +251,6 @@ if(WIN32)
+@@ -240,18 +242,6 @@ if(WIN32)
    link_libraries("vfw32" "comctl32" "winmm")
  endif()
  
@@ -38,9 +38,9 @@ index 708c18e4..519c1db7 100644
 -link_libraries(libepoxy::libepoxy)
 -include_directories(${LIBEPOXY_INCLUDE_DIR})
 -
- find_package(Eigen3 3.3 REQUIRED NO_MODULE) # -DEigen3_DIR=...
- message(STATUS "Found Eigen3 ${EIGEN3_VERSION_STRING}")
- link_libraries(Eigen3::Eigen)
+ find_package(Eigen3 CONFIG REQUIRED NO_MODULE) # -DEigen3_DIR=...
+ message(STATUS "Found Eigen3 ${Eigen3_VERSION}")
+ # version range in find_package is only supported in CMake 3.19 or later
 diff --git a/src/celestia/CMakeLists.txt b/src/celestia/CMakeLists.txt
 index 013a6f98..4da0862f 100644
 --- a/src/celestia/CMakeLists.txt

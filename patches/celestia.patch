@@ -76,10 +76,10 @@ index 68783578..72b2c12e 100644
      m_appCore->resize(m_width, m_height);
  
 diff --git a/src/celestia/sdl/sdlmain.cpp b/src/celestia/sdl/sdlmain.cpp
-index c5c8efe8..7ebec9b7 100644
+index 167f1082..f4e29d38 100644
 --- a/src/celestia/sdl/sdlmain.cpp
 +++ b/src/celestia/sdl/sdlmain.cpp
-@@ -25,9 +25,9 @@ main(int argc, char **argv)
+@@ -57,9 +57,9 @@ main(int argc, char **argv)
      CelestiaCore::initLocale();
  
  #ifdef ENABLE_NLS
@@ -91,19 +91,11 @@ index c5c8efe8..7ebec9b7 100644
      bind_textdomain_codeset("celestia", "UTF-8");
      textdomain("celestia");
  #endif
-@@ -39,21 +39,6 @@ main(int argc, char **argv)
+@@ -71,13 +71,6 @@ main(int argc, char **argv)
      if (!environment->setGLAttributes())
          return EXIT_FAILURE;
  
--    std::filesystem::path dataDir;
--#ifdef _WIN32
--    if (const wchar_t* dataDirEnv = _wgetenv(L"CELESTIA_DATA_DIR"); dataDirEnv == nullptr)
--#else
--    if (const char* dataDirEnv = std::getenv("CELESTIA_DATA_DIR"); dataDirEnv == nullptr)
--#endif
--        dataDir = CONFIG_DATA_DIR;
--    else
--        dataDir = dataDirEnv;
+-    std::filesystem::path dataDir = getDataDir();
 -
 -    std::error_code ec;
 -    std::filesystem::current_path(dataDir, ec);
