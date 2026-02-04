@@ -58,7 +58,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download 1_9_4_rc1 -R celestiamobile/Celestia -p "CelestiaResources1.9.4.zip" --dir "${{ runner.temp }}/artifacts"
+          gh release download 1_9_7_rc1 -R celestiamobile/Celestia -p "CelestiaResources1.9.7.zip" --dir "${{ runner.temp }}/artifacts"
 
       - name: Checkout Branch
         run: |
@@ -89,7 +89,7 @@ jobs:
       - name: Unzip Resources
         run: |
           cd Celestia
-          unzip "${{ runner.temp }}/artifacts/CelestiaResources1.9.4.zip" -d .
+          unzip "${{ runner.temp }}/artifacts/CelestiaResources1.9.7.zip" -d .
           unzip "${{ runner.temp }}/artifacts/CelestiaResources1.4.3.zip" -d old
 
       - name: Fix Resources
