@@ -48,12 +48,6 @@ jobs:
         run: |
           brew install wget cmake zsh gperf tcsh
 
-      - name: Download Resources (Old)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release download 1_4_3_rc1 -R celestiamobile/Celestia -p "CelestiaResources1.4.3.zip" --dir "${{ runner.temp }}/artifacts"
-
       - name: Download Resources
         env:
           GH_TOKEN: ${{ github.token }}
@@ -90,22 +84,11 @@ jobs:
         run: |
           cd Celestia
           unzip "${{ runner.temp }}/artifacts/CelestiaResources1.9.13.zip" -d .
-          unzip "${{ runner.temp }}/artifacts/CelestiaResources1.4.3.zip" -d old
 
       - name: Fix Resources
         run: |
           cd Celestia
           
-          rm -rf CelestiaResources/data
-          rm -rf CelestiaResources/textures
-          rm -rf CelestiaResources/models
-          rm -rf CelestiaResources/extras
-          rm -rf CelestiaResources/extras-standard
-          rsync -rv --quiet --exclude='CMakeLists.txt' old/CelestiaResources/data CelestiaResources
-          rsync -rv --quiet --exclude='CMakeLists.txt' old/CelestiaResources/textures CelestiaResources
-          rsync -rv --quiet --exclude='CMakeLists.txt' old/CelestiaResources/models CelestiaResources
-          rsync -rv --quiet --exclude='CMakeLists.txt' old/CelestiaResources/extras-standard CelestiaResources
-
           rm -rf CelestiaResources/shaders
           rsync -rv --quiet --exclude='CMakeLists.txt' shaders CelestiaResources
           rsync -rv --quiet --exclude='CMakeLists.txt' fonts CelestiaResources
