@@ -1,8 +1,8 @@
 diff --git a/src/celengine/glsupport.cpp b/src/celengine/glsupport.cpp
-index 17a9ca6e..e990eacb 100644
+index e0deb9e4..2ff1da74 100644
 --- a/src/celengine/glsupport.cpp
 +++ b/src/celengine/glsupport.cpp
-@@ -4,6 +4,10 @@
+@@ -6,6 +6,10 @@
  
  namespace celestia::gl
  {
@@ -12,8 +12,8 @@ index 17a9ca6e..e990eacb 100644
 +epoxy_has_gl_extension(const char *ext);
  
  #ifdef GL_ES
- CELAPI bool OES_vertex_array_object        = false;
-@@ -137,4 +141,100 @@ void disableGeomShaders() noexcept
+ CELAPI bool OES_vertex_array_object              = false;
+@@ -156,4 +160,100 @@ void disableGeomShaders() noexcept
      EnableGeomShaders = false;
  }
  
@@ -115,7 +115,7 @@ index 17a9ca6e..e990eacb 100644
 +}
  } // end namespace celestia::gl
 diff --git a/src/celengine/glsupport.h b/src/celengine/glsupport.h
-index dce2d254..5ed614ce 100644
+index 1c9738dc..87e3f71d 100644
 --- a/src/celengine/glsupport.h
 +++ b/src/celengine/glsupport.h
 @@ -12,7 +12,14 @@
@@ -157,7 +157,7 @@ index cc166b93..bd615de7 100644
  }
  
 diff --git a/src/celscript/lua/celx_misc.cpp b/src/celscript/lua/celx_misc.cpp
-index 010992fd..01836ed8 100644
+index f7e1fe93..cb7e298b 100644
 --- a/src/celscript/lua/celx_misc.cpp
 +++ b/src/celscript/lua/celx_misc.cpp
 @@ -214,8 +214,8 @@ static int font_render(lua_State* l)
@@ -172,10 +172,10 @@ index 010992fd..01836ed8 100644
      layout.setFont(*font);
      layout.begin(p, m);
 diff --git a/src/celscript/lua/glcompat.cpp b/src/celscript/lua/glcompat.cpp
-index bf8cc4f0..a7af11b8 100644
+index c28b097c..b14cee8f 100644
 --- a/src/celscript/lua/glcompat.cpp
 +++ b/src/celscript/lua/glcompat.cpp
-@@ -482,7 +482,7 @@ void fpcGetFloatv(GLenum pname, GLfloat *params) noexcept
+@@ -485,7 +485,7 @@ void fpcGetFloatv(GLenum pname, GLfloat *params) noexcept
          memcpy(params, g_projectionStack[g_projectionPosition].data(), 16*sizeof(float));
          break;
      default:
@@ -184,7 +184,7 @@ index bf8cc4f0..a7af11b8 100644
          break;
      }
  }
-@@ -495,7 +495,7 @@ void fpcEnable(GLenum param) noexcept
+@@ -498,7 +498,7 @@ void fpcEnable(GLenum param) noexcept
      case GL_LINE_SMOOTH:
  #endif
      case GL_BLEND:
@@ -193,7 +193,7 @@ index bf8cc4f0..a7af11b8 100644
      default:
          break;
      }
-@@ -509,7 +509,7 @@ void fpcDisable(GLenum param) noexcept
+@@ -512,7 +512,7 @@ void fpcDisable(GLenum param) noexcept
      case GL_LINE_SMOOTH:
  #endif
      case GL_BLEND:

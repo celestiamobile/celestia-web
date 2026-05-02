@@ -15,31 +15,53 @@ index 00000000..37651210
 +});
 \ No newline at end of file
 diff --git a/src/celestia/sdl/appwindow.cpp b/src/celestia/sdl/appwindow.cpp
-index 68783578..72b2c12e 100644
+index 3752af0f..72b2c12e 100644
 --- a/src/celestia/sdl/appwindow.cpp
 +++ b/src/celestia/sdl/appwindow.cpp
-@@ -25,18 +25,36 @@
- #endif
- 
- #include <celestia/celestiacore.h>
-+#include <celestia/progressnotifier.h>
- #include <celutil/gettext.h>
- #include <celutil/tzutil.h>
- #include "clipboard.h"
+@@ -30,6 +30,10 @@
  #include "gui.h"
  #include "settings.h"
- 
+
 +extern "C" {
 +    extern void celestiaLoadSuccess();
-+    extern void celestiaLoadFile(const char *file, size_t lenfile);
 +}
 +
  namespace celestia::sdl
  {
- 
+
+@@ -191,6 +195,9 @@ AppWindow::run(const Settings& settings)
+
+     m_appCore->start();
+     setTimezone(*m_appCore);
++
++    celestiaLoadSuccess();
++
+     SDL_GL_GetDrawableSize(m_window.get(), &m_width, &m_height);
+     m_appCore->resize(m_width, m_height);
+
+diff --git a/src/celestia/sdl/sdlmain.cpp b/src/celestia/sdl/sdlmain.cpp
+index cf15e661..f4e29d38 100644
+--- a/src/celestia/sdl/sdlmain.cpp
++++ b/src/celestia/sdl/sdlmain.cpp
+@@ -13,6 +13,7 @@
+ #include <utility>
+
+ #include <celestia/celestiacore.h>
++#include <celestia/progressnotifier.h>
+ #include <celutil/gettext.h>
+ #include "alerter.h"
+ #include "appwindow.h"
+@@ -24,9 +25,25 @@
+ #include <windows.h>
+ #endif
+
++extern "C" {
++    extern void celestiaLoadFile(const char *file, size_t lenfile);
++}
++
  namespace
  {
- 
+
 +class CelestiaCoreProgressWatcher: public ProgressNotifier
 +{
 +public:
@@ -52,36 +74,12 @@ index 68783578..72b2c12e 100644
 +    }
 +};
 +
- void
- setTimezone(CelestiaCore& appCore)
+ std::filesystem::path
+ getDataDir()
  {
-@@ -193,7 +211,8 @@ AppWindow::run(const Settings& settings)
-     m_appCore = std::make_unique<CelestiaCore>();
-     m_alerter = std::make_unique<Alerter>(m_window.get());
-     m_appCore->setAlerter(m_alerter.get());
--    if (!m_appCore->initSimulation())
-+    CelestiaCoreProgressWatcher progressWatcher;
-+    if (!m_appCore->initSimulation("celestia.cfg", {}, &progressWatcher))
-         return false;
- 
-     if (float screenDpi = 96.0f; SDL_GetDisplayDPI(0, &screenDpi, nullptr, nullptr) == 0)
-@@ -211,6 +230,9 @@ AppWindow::run(const Settings& settings)
- 
-     m_appCore->start();
-     setTimezone(*m_appCore);
-+
-+    celestiaLoadSuccess();
-+
-     SDL_GL_GetDrawableSize(m_window.get(), &m_width, &m_height);
-     m_appCore->resize(m_width, m_height);
- 
-diff --git a/src/celestia/sdl/sdlmain.cpp b/src/celestia/sdl/sdlmain.cpp
-index 167f1082..f4e29d38 100644
---- a/src/celestia/sdl/sdlmain.cpp
-+++ b/src/celestia/sdl/sdlmain.cpp
-@@ -57,9 +57,9 @@ main(int argc, char **argv)
+@@ -59,9 +76,9 @@ main(int argc, char **argv)
      CelestiaCore::initLocale();
- 
+
  #ifdef ENABLE_NLS
 -    bindtextdomain("celestia", LOCALEDIR);
 +    bindtextdomain("celestia", "locale");
@@ -91,10 +89,18 @@ index 167f1082..f4e29d38 100644
      bind_textdomain_codeset("celestia", "UTF-8");
      textdomain("celestia");
  #endif
-@@ -71,13 +71,6 @@ main(int argc, char **argv)
-     if (!environment->setGLAttributes())
+@@ -74,19 +91,13 @@ main(int argc, char **argv)
+     auto alerter = std::make_unique<celestia::sdl::Alerter>();
+     celestiaCore->setAlerter(alerter.get());
+
+-    if (!celestiaCore->initSimulation())
++    CelestiaCoreProgressWatcher progressWatcher;
++    if (!celestiaCore->initSimulation("celestia.cfg", {}, &progressWatcher))
          return EXIT_FAILURE;
- 
+
+     if (!environment->setGLAttributes(celestiaCore->getConfig()->renderDetails.aaSamples))
+         return EXIT_FAILURE;
+
 -    std::filesystem::path dataDir = getDataDir();
 -
 -    std::error_code ec;
@@ -103,5 +109,5 @@ index 167f1082..f4e29d38 100644
 -        return EXIT_FAILURE;
 -
      Settings settings = Settings::load(environment->getSettingsPath());
- 
-     auto window = environment->createAppWindow(settings);
+
+     auto window = environment->createAppWindow(settings, std::move(celestiaCore), std::move(alerter));
