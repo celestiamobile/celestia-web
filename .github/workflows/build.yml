@@ -114,7 +114,7 @@ jobs:
           
           
           # Select Xcode
-          sudo xcode-select -s /Applications/Xcode_26.1.app
+          sudo xcode-select -s /Applications/Xcode_26.4.app
           xcodebuild -version
           
           chmod +x prepare_icu.sh
