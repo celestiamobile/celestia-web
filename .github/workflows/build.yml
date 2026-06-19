@@ -46,13 +46,13 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          brew install wget cmake zsh gperf tcsh
+          brew install wget cmake zsh gperf tcsh meson ninja
 
       - name: Download Resources
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download 1_9_17_rc1 -R celestiamobile/Celestia -p "CelestiaResources1.9.17.zip" --dir "${{ runner.temp }}/artifacts"
+          gh release download 1_9_18_rc1 -R celestiamobile/Celestia -p "CelestiaResources1.9.18.zip" --dir "${{ runner.temp }}/artifacts"
 
       - name: Checkout Branch
         run: |
@@ -78,7 +78,7 @@ jobs:
       - name: Unzip Resources
         run: |
           cd Celestia
-          unzip "${{ runner.temp }}/artifacts/CelestiaResources1.9.17.zip" -d .
+          unzip "${{ runner.temp }}/artifacts/CelestiaResources1.9.18.zip" -d .
 
       - name: Fix Resources
         run: |
@@ -109,7 +109,7 @@ jobs:
           
           
           # Select Xcode
-          sudo xcode-select -s /Applications/Xcode_26.4.app
+          sudo xcode-select -s /Applications/Xcode_26.5.app
           xcodebuild -version
           
           chmod +x prepare_icu.sh
