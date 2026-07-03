@@ -111,3 +111,36 @@ index cf15e661..f4e29d38 100644
      Settings settings = Settings::load(environment->getSettingsPath());
 
      auto window = environment->createAppWindow(settings, std::move(celestiaCore), std::move(alerter));
+diff --git a/src/celengine/resourcesystem.cpp b/src/celengine/resourcesystem.cpp
+index 636b70275..70c951f85 100644
+--- a/src/celengine/resourcesystem.cpp
++++ b/src/celengine/resourcesystem.cpp
+@@ -23,9 +23,14 @@ ResourceSystem::ResourceSystem(unsigned numWorkers)
+         numWorkers = hw > 1 ? hw - 1 : 1;
+     }
+ 
++#if defined(__EMSCRIPTEN__) && !defined(__EMSCRIPTEN_PTHREADS__)
++    // Single-threaded WebAssembly build: std::thread is unavailable, so run
++    // decode tasks synchronously in submit() (see the m_workers.empty() path).
++#else
+     m_workers.reserve(numWorkers);
+     for (unsigned i = 0; i < numWorkers; ++i)
+         m_workers.emplace_back(&ResourceSystem::workerLoop, this);
++#endif
+ }
+ 
+ ResourceSystem::~ResourceSystem()
+@@ -56,6 +61,13 @@ ResourceSystem::submit(DecodeTask task)
+     if (!task)
+         return;
+ 
++    if (m_workers.empty())
++    {
++        // No worker pool: run the task on the calling thread.
++        task();
++        return;
++    }
++
+     {
+         std::scoped_lock lock(m_workMutex);
+         m_work.push(std::move(task));

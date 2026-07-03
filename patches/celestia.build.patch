@@ -78,7 +78,7 @@ index 1d5dabaf8..907d56eb1 100644
      COMPONENT sdlgui
    )
  else()
-+  set_target_properties(celestia-sdl PROPERTIES LINK_FLAGS "--preload-file ${CMAKE_SOURCE_DIR}/CelestiaResources@/ --bind -sUSE_WEBGL2=1 -sGL_ENABLE_GET_PROC_ADDRESS -sTOTAL_MEMORY=419430400 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=2147483648 -pthread -sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency --js-library ${CMAKE_SOURCE_DIR}/library.js")
++  set_target_properties(celestia-sdl PROPERTIES LINK_FLAGS "--preload-file ${CMAKE_SOURCE_DIR}/CelestiaResources@/ --bind -sUSE_WEBGL2=1 -sGL_ENABLE_GET_PROC_ADDRESS -sTOTAL_MEMORY=419430400 --js-library ${CMAKE_SOURCE_DIR}/library.js")
    install(
      TARGETS celestia-sdl
      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
